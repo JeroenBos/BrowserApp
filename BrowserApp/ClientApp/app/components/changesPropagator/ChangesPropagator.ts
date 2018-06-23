@@ -14,6 +14,7 @@ export class ChangesPropagator {
 
     public async registerRequest(): Promise<void> {
         try {
+            console.log('registering request');
             const response = await this.http.post(this.baseUrl + 'api/Changes/RegisterRequest', {}).toPromise();
 
             this.processResponse(response.json() as IResponse);
