@@ -1,5 +1,6 @@
 ﻿using BrowserApp.POCOs;
 using JBSnorro.Diagnostics;
+using JBSnorro.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -144,8 +145,8 @@ namespace BrowserApp
         }
         public static bool IncludeDeep(Type type)
         {
-            return type == typeof(INotifyPropertyChanged)
-                || type == typeof(INotifyCollectionChanged);
+            return type.Implements(typeof(INotifyPropertyChanged))
+                || type.Implements(typeof(INotifyCollectionChanged));
         }
 
         public static IEnumerable<PropertyInfo> GetIncludedProperties(INotifyPropertyChanged container)
