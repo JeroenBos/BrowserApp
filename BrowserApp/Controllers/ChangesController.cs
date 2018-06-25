@@ -9,51 +9,32 @@ namespace BrowserApp.Controllers
     [Route("api/[controller]")]
     public class ChangesController : Controller
     {
+        private readonly UserSessionManager userSessionManager;
+        public ChangesController(UserSessionManager userSessionManager)
+        {
+            if(userSessionManager == null) { throw new ArgumentNullException(nameof(userSessionManager)); }
+
+            this.userSessionManager = userSessionManager;
+        }
+
+        [HttpPost("[action]")]
+        public async Task<object> Open()
+        {
+            var userSession = await this.userSessionManager.GetOrCreateSessionAsync(this.User);
+            userSession.View.AddCompleteStateAsChanges(userSession.ViewModelRoot);
+
+            return userSession.Flush();
+        }
+        [HttpPost("[action]")]
+        public Task<object> ExecuteCommand()
+        {
+            return RegisterRequest();
+        }
         [HttpPost("[action]")]
         public async Task<object> RegisterRequest()
         {
-            await Task.Delay(1000);
-            return new Response(new PropertyChange() { Id = 0, PropertyName = "number", Value = 1 });
-        }
-
-
-        new class Response
-        {
-            public Change[] Changes { get; }
-            public Response(params Change[] changes)
-            {
-                if (changes == null) throw new ArgumentNullException(nameof(changes));
-
-                this.Changes = changes;
-            }
-        }
-        class Change
-        {
-            public int Id { get; set; }
-        }
-
-        class PropertyChange : Change
-        {
-            public string PropertyName { get; set; }
-            public object Value { get; set; }
-        }
-        class CollectionChange : Change
-        {
-            public string CollectionName { get; set; }
-        }
-        class ICollectionItemRemoved : CollectionChange
-        {
-            public int RemovedItemId { get; set; }
-        }
-        class CollectionItemAdded : CollectionChange
-        {
-            public object Item { get; set; }
-            public int? Index { get; set; }
-        }
-        class ICollectionItemsReordered : CollectionChange
-        {
-            public int Index1 { get; set; }
-            public int Index2 { get; set; }
+            var userSession = await this.userSessionManager.GetOrCreateSessionAsync(User);
+            return userSession.Flush();
         }
     }
 }
