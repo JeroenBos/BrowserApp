@@ -33,7 +33,7 @@ namespace BrowserApp
             {
                 return Task.FromResult(session);
             }
-            return null;
+            return Task.FromResult<UserSession>(null);
         }
         public async Task<UserSession> GetStoredSessionAsync(ClaimsPrincipal user)
         {
@@ -66,7 +66,7 @@ namespace BrowserApp
         }
         private static string getStorageUserIdentifier(ClaimsPrincipal user)
         {
-            return user?.Identity?.Name;
+            return user?.Identity?.Name ?? "";
         }
     }
 }
