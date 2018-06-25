@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -23,6 +25,23 @@ namespace BrowserApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+
+            var userSessionManager = new UserSessionManager(new TempUserSessionsStorage(), stream => new TempViewModel());
+            services.AddTransient(serviceProvider => userSessionManager);
+        }
+        class TempUserSessionsStorage : IUserSessionsStorage
+        {
+            public void CreateOrUpdate(string user, Stream data)
+            {
+            }
+            public Task<Stream> TryOpen(string user)
+            {
+                return Task.FromResult<Stream>(new MemoryStream());
+            }
+        }
+        class TempViewModel : INotifyPropertyChanged
+        {
+            public event PropertyChangedEventHandler PropertyChanged;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

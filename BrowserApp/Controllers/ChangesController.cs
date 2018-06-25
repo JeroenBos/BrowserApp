@@ -33,8 +33,10 @@ namespace BrowserApp.Controllers
         [HttpPost("[action]")]
         public async Task<object> RegisterRequest()
         {
+            await Task.Delay(1000); // TODO: remove
             var userSession = await this.userSessionManager.GetOrCreateSessionAsync(User);
-            return userSession.Flush();
+            var result = userSession.Flush();
+            return result;
         }
     }
 }
