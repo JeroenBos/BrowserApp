@@ -17,9 +17,8 @@ namespace BrowserApp
         /// <param name="info"> Is null iff the container is a collection. </param>
         public delegate void AcceptDelegate(object container, PropertyInfo info, object value);
 
-
         /// <summary>
-        /// Visists all included properties and collection items under the specified view model.
+        /// Visits all included properties and collection items under the specified view model.
         /// </summary>
         public static void VisitProperties(object viewModel, AcceptDelegate visitNode)
         {
@@ -62,9 +61,9 @@ namespace BrowserApp
         /// Visits all included view models under the specified view model.
         /// </summary>
         private static void visit(object viewModel,
-                           Action<INotifyPropertyChanged> visitPropertyChangedNode,
-                           Action<INotifyCollectionChanged> visitCollectionChangedNode,
-                           AcceptDelegate visitProperty)
+                                  Action<INotifyPropertyChanged> visitPropertyChangedNode,
+                                  Action<INotifyCollectionChanged> visitCollectionChangedNode,
+                                  AcceptDelegate visitProperty)
         {
             Contract.Requires(viewModel != null);
 
