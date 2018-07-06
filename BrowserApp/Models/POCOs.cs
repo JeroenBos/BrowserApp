@@ -72,7 +72,7 @@ namespace BrowserApp.POCOs
         {
             Contract.Requires(containerId >= 0);
             Contract.Requires(!string.IsNullOrEmpty(propertyName));
-            Contract.Requires(value == null || !IncludeDeep(value.GetType()), $"Objects of type '{value.GetType()}' cannot be serialized. Use a reference instead. ");
+            Contract.Requires(value == null || !IncludeDeep(value.GetType()), $"Objects of type '{value?.GetType()}' cannot be serialized. Use a reference instead. ");
 
             // TODO: validate that value can be serialized
 
