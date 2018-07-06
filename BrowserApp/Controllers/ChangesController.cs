@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Input;
+using BrowserApp;
+using BrowserApp.POCOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BrowserApp.Controllers
@@ -33,10 +36,29 @@ namespace BrowserApp.Controllers
         [HttpPost("[action]")]
         public async Task<object> RegisterRequest()
         {
-            await Task.Delay(1000); // TODO: remove
             var userSession = await this.userSessionManager.GetOrCreateSessionAsync(User);
-            var result = userSession.Flush();
-            return result;
+            userSession.ExecuteCommand(new DummyCommand(userSession));
+            return await userSession.FlushOrWait();
         }
+    }
+}
+class DummyCommand : ICommand
+{
+    private UserSession userSession;
+    public DummyCommand(UserSession userSession)
+    {
+        this.userSession = userSession;
+    }
+    public event EventHandler CanExecuteChanged;
+
+    public bool CanExecute(object parameter)
+    {
+        return true;
+    }
+
+    public void Execute(object parameter)
+    {
+        System.Threading.Thread.Sleep(3000);
+        userSession.RegisterChange(PropertyChange.Create(0, "prop", 1));
     }
 }

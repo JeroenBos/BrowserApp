@@ -40,7 +40,7 @@ namespace BrowserApp
             Stream userSessionData = await this.storedUserSessions.TryOpen(getStorageUserIdentifier(user));
             if (userSessionData != null)
             {
-                return new UserSession(this.viewModelFactory, userSessionData);
+                return new UserSession(this.viewModelFactory(userSessionData));
             }
             return null;
         }

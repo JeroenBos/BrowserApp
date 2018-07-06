@@ -15,10 +15,15 @@ export class ChangesPropagator {
     public async registerRequest(): Promise<void> {
         try {
             console.log('registering request');
-            const response = await this.http.post(this.baseUrl + 'api/Changes/RegisterRequest', {}).toPromise();
+            const request = await this.http.post(this.baseUrl + 'api/Changes/RegisterRequest', {}).toPromise();
+            const response = request.json() as IResponse;
 
-            this.processResponse(response.json() as IResponse);
-            this.registerRequest();
+            console.log(response);
+
+            this.processResponse(response);
+            if (response.rerequest) {
+                this.registerRequest();
+            }
         }
         catch (error) {
             console.error(error);
@@ -99,6 +104,7 @@ type admissibleTypes = string | number | object;
 
 interface IResponse {
     changes: IChange[];
+    rerequest: boolean;
 }
 interface IChange {
     id: number;

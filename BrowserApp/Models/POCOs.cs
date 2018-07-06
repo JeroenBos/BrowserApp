@@ -1,4 +1,5 @@
-﻿using JBSnorro.Diagnostics;
+﻿using JBSnorro;
+using JBSnorro.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,11 +11,13 @@ namespace BrowserApp.POCOs
     class Response
     {
         public Change[] Changes { get; }
-        public Response(params Change[] changes)
+        public bool Rerequest { get; }
+        public Response(bool rerequest, params Change[] changes)
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
 
             this.Changes = changes;
+            this.Rerequest = rerequest;
         }
     }
     abstract class Change
