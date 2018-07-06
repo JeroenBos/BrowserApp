@@ -1,15 +1,27 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using BrowserApp.POCOs;
+using JBSnorro.Diagnostics;
+using JBSnorro.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace BrowserApp.Tests
 {
     [TestClass]
     public class UserSessionTests
     {
+        static UserSessionTests()
+        {
+            logger = new Logger();
+            loggerPipe = new LoggerConsolePipe(logger);
+        }
+        private static readonly Logger logger;
+        private static readonly LoggerConsolePipe loggerPipe;
+
         /// <summary>
         /// Returns a task that wait long enough to ensure that any task processing has been handled.
         /// </summary>
@@ -20,7 +32,7 @@ namespace BrowserApp.Tests
         [TestMethod]
         public void CleanUserSessionFlushReturnsNothing()
         {
-            var userSession = new UserSession(new MockViewModel());
+            var userSession = new UserSession(new MockViewModel(),logger);
 
             Assert.AreEqual(0, userSession.Flush().Changes.Length);
         }
@@ -28,7 +40,7 @@ namespace BrowserApp.Tests
         public async Task CleanUserSessionFlushWaitWaits()
         {
             const int t = 100;
-            var userSession = new UserSession(new MockViewModel(), new AtMostOneAwaiter(t * 2));
+            var userSession = new UserSession(new MockViewModel(), logger, new AtMostOneAwaiter(t * 2));
 
             Task wait = userSession.FlushOrWait();
             Task delay = Task.Delay(t);
@@ -40,7 +52,7 @@ namespace BrowserApp.Tests
         public async Task SecondaryFlushWaitCompletesFirst()
         {
             const int t = 100;
-            var userSession = new UserSession(new MockViewModel(), new AtMostOneAwaiter(t * 2));
+            var userSession = new UserSession(new MockViewModel(), logger, new AtMostOneAwaiter(t * 2));
 
             Task firstWait = userSession.FlushOrWait();
             await Task.Delay(t);
@@ -53,10 +65,9 @@ namespace BrowserApp.Tests
 
     class MockViewModel : INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void Invoke(string propertyName)
+        public static void ToConsole(this ILogger logger)
         {
-            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            new LoggerConsolePipe(logger);
         }
     }
 }

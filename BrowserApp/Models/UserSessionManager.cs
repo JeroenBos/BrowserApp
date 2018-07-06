@@ -1,4 +1,6 @@
-﻿using System;
+﻿using JBSnorro.Diagnostics;
+using JBSnorro.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,14 +15,17 @@ namespace BrowserApp
         private readonly IUserSessionsStorage storedUserSessions;
         private readonly ViewModelFactoryDelegate viewModelFactory;
         private readonly Dictionary<string, UserSession> cachedSessions = new Dictionary<string, UserSession>();
+        private readonly ILogger logger;
 
-        public UserSessionManager(IUserSessionsStorage userSessionsStorage, ViewModelFactoryDelegate createInitialViewModelRoot)
+        public UserSessionManager(IUserSessionsStorage userSessionsStorage, ViewModelFactoryDelegate createInitialViewModelRoot, ILogger logger)
         {
             if (userSessionsStorage == null) { throw new ArgumentNullException(nameof(userSessionsStorage)); }
             if (createInitialViewModelRoot == null) { throw new ArgumentNullException(nameof(createInitialViewModelRoot)); }
+            Contract.Requires(logger != null);
 
             this.storedUserSessions = userSessionsStorage;
             this.viewModelFactory = createInitialViewModelRoot;
+            this.logger = logger;
         }
 
         public Task<UserSession> GetCachedSessionAsync(ClaimsPrincipal user)
@@ -40,7 +45,7 @@ namespace BrowserApp
             Stream userSessionData = await this.storedUserSessions.TryOpen(getStorageUserIdentifier(user));
             if (userSessionData != null)
             {
-                return new UserSession(this.viewModelFactory(userSessionData));
+                return new UserSession(this.viewModelFactory(userSessionData), this.logger);
             }
             return null;
         }
@@ -62,7 +67,7 @@ namespace BrowserApp
                 return retrievedSession;
             }
 
-            return new UserSession(this.viewModelFactory);
+            return new UserSession(this.viewModelFactory, this.logger);
         }
         private static string getStorageUserIdentifier(ClaimsPrincipal user)
         {

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using JBSnorro.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.Webpack;
@@ -25,8 +26,8 @@ namespace BrowserApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-
-            var userSessionManager = new UserSessionManager(new TempUserSessionsStorage(), stream => new TempViewModel());
+            var logger = new Logger();
+            var userSessionManager = new UserSessionManager(new TempUserSessionsStorage(), stream => new TempViewModel(), logger);
             services.AddTransient(serviceProvider => userSessionManager);
         }
         class TempUserSessionsStorage : IUserSessionsStorage
