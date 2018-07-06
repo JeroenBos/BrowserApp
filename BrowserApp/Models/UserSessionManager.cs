@@ -19,8 +19,8 @@ namespace BrowserApp
 
         public UserSessionManager(IUserSessionsStorage userSessionsStorage, ViewModelFactoryDelegate createInitialViewModelRoot, ILogger logger)
         {
-            if (userSessionsStorage == null) { throw new ArgumentNullException(nameof(userSessionsStorage)); }
-            if (createInitialViewModelRoot == null) { throw new ArgumentNullException(nameof(createInitialViewModelRoot)); }
+            Contract.Requires(userSessionsStorage != null);
+            Contract.Requires(createInitialViewModelRoot != null);
             Contract.Requires(logger != null);
 
             this.storedUserSessions = userSessionsStorage;

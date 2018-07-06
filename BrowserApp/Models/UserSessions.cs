@@ -86,7 +86,7 @@ namespace BrowserApp
 
             this.logger = logger;
             this.View = new View(viewModelRoot, this.RegisterChange, new IdProvider());
-            this.commands = new ProcessingQueue<ICommand>(() => ThreadPool.QueueUserWorkItem(state => this.worker()));
+            this.commands = new ProcessingQueue<ICommand>(() => Task.Run(this.worker));
             this.waiter = waiter ?? new AtMostOneAwaiter(defaultDuration: _10ms, maxDuration: _5minutes);
         }
 
