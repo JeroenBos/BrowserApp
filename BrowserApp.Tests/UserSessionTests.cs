@@ -76,7 +76,52 @@ namespace BrowserApp.Tests
             Assert.AreEqual(1, result.Changes.Length);
         }
 
-    class MockViewModel : INotifyPropertyChanged
+        class MockCommand : ICommand
+        {
+            private readonly ILogger logger;
+            private readonly MockViewModel viewModel;
+            public MockCommand(MockViewModel viewModel, ILogger logger)
+            {
+                Contract.Requires(viewModel != null);
+                Contract.Requires(logger != null);
+                this.viewModel = viewModel;
+                this.logger = logger;
+            }
+            public event EventHandler CanExecuteChanged;
+
+            public bool CanExecute(object parameter)
+            {
+                return true;
+            }
+
+            public void Execute(object parameter)
+            {
+                logger.LogInfo("MockCommand: executing command");
+                DelayDelta().Wait();
+                viewModel.Invoke("prop");
+                logger.LogInfo("MockCommand: invoked property change 'prop'");
+            }
+        }
+        class MockViewModel : INotifyPropertyChanged
+        {
+            private string _prop;
+            public event PropertyChangedEventHandler PropertyChanged;
+            public string Prop
+            {
+                get { return _prop; }
+                set
+                {
+                    this._prop = value;
+                    Invoke("Prop");
+                }
+            }
+            public void Invoke(string propertyName)
+            {
+                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+    }
+    public static class Extensions
     {
         public static void ToConsole(this ILogger logger)
         {
