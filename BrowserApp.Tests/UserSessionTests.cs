@@ -61,7 +61,20 @@ namespace BrowserApp.Tests
 
             Assert.IsTrue(firstWait.IsCompleted);
         }
-    }
+        [TestMethod]
+        public async Task PropertyChangeIsFlushed()
+        {
+            const int t = 100;
+            var viewModel = new MockViewModel();
+            var userSession = new UserSession(viewModel, logger, new AtMostOneAwaiter(t * 2));
+
+            var wait = userSession.FlushOrWait();
+
+            userSession.ExecuteCommand(new MockCommand(viewModel, logger));
+
+            var result = await wait;
+            Assert.AreEqual(1, result.Changes.Length);
+        }
 
     class MockViewModel : INotifyPropertyChanged
     {
