@@ -15,6 +15,7 @@ namespace BrowserApp
 {
     public class UserSession
     {
+        private static readonly bool alwaysRerequest = false;
         public object ViewModelRoot { get; }
         internal View View { get; }
         private readonly object _lock = new object();
@@ -38,20 +39,19 @@ namespace BrowserApp
         internal async Task<Response> FlushOrWait()
         {
             logger.LogInfo("UserSession: Flushing or waiting");
-            this.waiter.Reset();
 
             lock (_lock)
             {
-                var changes = this.changes.Clear().ToArray();
-
-                if (changes.Length != 0)
+                Response flush = Flush();
+                if (flush.Changes.Length != 0)
                 {
-                    return new Response(this.commands.Count != 0, changes);
+                    return flush;
                 }
             }
 
             logger.LogInfo("UserSession: Waiting");
             await this.waiter.Wait();
+            logger.LogInfo("UserSession: Waited");
 
             return this.Flush();
         }
@@ -60,13 +60,19 @@ namespace BrowserApp
         /// </summary>
         internal Response Flush()
         {
-            logger.LogInfo("UserSession: Flushing");
-
             lock (_lock)
             {
                 var changes = this.changes.Clear().ToArray();
+                logger.LogInfo($"UserSession: Flushing {changes.Length} changes");
 
-                return new Response(this.commands.Count != 0, changes);
+                if (changes.Length != 0)
+                {
+                    logger.LogInfo($"UserSession: Resetting");
+
+                    this.waiter.Reset();
+                }
+
+                return new Response(alwaysRerequest || this.commands.Count != 0, changes);
             }
         }
         internal void RegisterChange(Change change)
@@ -107,7 +113,16 @@ namespace BrowserApp
                 finally
                 {
                     commands.OnProcessed(command);
-                    logger.LogInfo("UserSession: Command completed");
+
+                    if (this.changes.Count != 0)
+                    {
+                        logger.LogInfo("UserSession: Command completed. Pulsing. ");
+                        this.waiter.Pulse();
+                    }
+                    else
+                    {
+                        logger.LogInfo("UserSession: Command completed. ");
+                    }
                 }
             }
         }

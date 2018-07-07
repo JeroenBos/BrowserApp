@@ -8,8 +8,13 @@ namespace BrowserApp
 {
     public interface IUserSessionsStorage
     {
-        void CreateOrUpdate(string user, Stream data);
-        Task<Stream> TryOpen(string user);
+        void CreateOrUpdate(string user, object data);
+        Task<object> TryOpen(string user);
+    }
+    public interface IUserSessionsStorage<TData> : IUserSessionsStorage
+    {
+        void CreateOrUpdate(string user, TData data);
+        new Task<TData> TryOpen(string user);
     }
 
 

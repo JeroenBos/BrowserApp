@@ -10,7 +10,7 @@ namespace BrowserApp.Tests
     {
         public static async Task Main(string[] args)
         {
-            await new UserSessionTests().SecondaryFlushWaitCompletesFirst();
+            await new UserSessionTests().PropertyChangeIsFlushed();
         }
     }
 }
