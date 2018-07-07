@@ -91,6 +91,7 @@ namespace BrowserApp
             Contract.Requires(viewModelRoot != null && IncludeDeep(viewModelRoot.GetType()), "The view model is not of any view model type");
 
             this.logger = logger;
+            this.ViewModelRoot = viewModelRoot;
             this.View = new View(viewModelRoot, this.RegisterChange, new IdProvider());
             this.commands = new ProcessingQueue<ICommand>(() => Task.Run(this.worker));
             this.waiter = waiter ?? new AtMostOneAwaiter(defaultDuration: _10ms, maxDuration: _5minutes);
