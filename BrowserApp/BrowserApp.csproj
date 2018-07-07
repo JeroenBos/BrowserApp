@@ -22,7 +22,14 @@
 
   <ItemGroup>
     <!-- Files not to publish (note that the 'dist' subfolders are re-added below) -->
+    <Compile Remove="ClientApp\dist\**" />
+    <Compile Remove="wwwroot\dist\**" />
     <Content Remove="ClientApp\**" />
+    <Content Remove="wwwroot\dist\**" />
+    <EmbeddedResource Remove="ClientApp\dist\**" />
+    <EmbeddedResource Remove="wwwroot\dist\**" />
+    <None Remove="ClientApp\dist\**" />
+    <None Remove="wwwroot\dist\**" />
   </ItemGroup>
 
   <ItemGroup>
