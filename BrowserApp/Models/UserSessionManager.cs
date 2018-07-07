@@ -14,6 +14,7 @@ namespace BrowserApp
     {
         private readonly IUserSessionsStorage storedUserSessions;
         private readonly ViewModelFactoryDelegate viewModelFactory;
+        //TODO: implement cache retention
         private readonly Dictionary<string, UserSession> cachedSessions = new Dictionary<string, UserSession>();
         private readonly ILogger logger;
 
@@ -45,7 +46,7 @@ namespace BrowserApp
             Stream userSessionData = await this.storedUserSessions.TryOpen(getStorageUserIdentifier(user));
             if (userSessionData != null)
             {
-                return new UserSession(this.viewModelFactory(userSessionData), this.logger);
+                return createNewUserSession(userSessionData, user);
             }
             return null;
         }
@@ -67,7 +68,14 @@ namespace BrowserApp
                 return retrievedSession;
             }
 
-            return new UserSession(this.viewModelFactory, this.logger);
+            const Stream defaultSession = null;
+            return createNewUserSession(defaultSession, user);
+        }
+        private UserSession createNewUserSession(Stream userSessionData, ClaimsPrincipal user)
+        {
+            var result = new UserSession(this.viewModelFactory(userSessionData), this.logger);
+            this.cachedSessions[getStorageUserIdentifier(user)] = result;
+            return result;
         }
         private static string getStorageUserIdentifier(ClaimsPrincipal user)
         {
