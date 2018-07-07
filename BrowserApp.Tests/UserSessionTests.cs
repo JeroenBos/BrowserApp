@@ -17,18 +17,28 @@ namespace BrowserApp.Tests
         static UserSessionTests()
         {
             logger = new Logger();
-            loggerPipe = new LoggerConsolePipe(logger);
+            loggerPipe = new LoggerConsolePipe(logger, prependThreadId: true);
         }
         private static readonly Logger logger;
         private static readonly LoggerConsolePipe loggerPipe;
 
         [TestMethod]
-        public void CleanUserSessionFlushReturnsNothing()
+        public void CleanUserSessionFlushWithEmptyViewModelReturnsNothing()
         {
-            var userSession = new UserSession(new MockViewModel(),logger);
+            var userSession = new UserSession(new EmptyMockViewModel(), logger);
+            var response = userSession.Flush();
 
-            Assert.AreEqual(0, userSession.Flush().Changes.Length);
+            Assert.AreEqual(0, response.Changes.Length);
         }
+        [TestMethod]
+        public void CleanUserSessionFlushReturnsDoesNotViewModelState()
+        {
+            var userSession = new UserSession(new MockViewModel(), logger);
+            var response = userSession.Flush();
+
+            Assert.AreEqual(0, response.Changes.Length, "The initial state of the viewmodel was appended as change");
+        }
+
         [TestMethod]
         public async Task CleanUserSessionFlushWaitWaits()
         {
