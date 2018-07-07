@@ -2,6 +2,7 @@
 using JBSnorro.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Windows.Input;
 using static BrowserApp.Tests.Extensions;
@@ -12,6 +13,7 @@ namespace BrowserApp.Tests.Mocks
     {
         private readonly ILogger logger;
         private readonly MockViewModel viewModel;
+        [DebuggerHidden]
         public MockCommand(MockViewModel viewModel, ILogger logger)
         {
             Contract.Requires(viewModel != null);
@@ -25,6 +27,7 @@ namespace BrowserApp.Tests.Mocks
             remove { }
         }
 
+        [DebuggerHidden]
         public bool CanExecute(object parameter)
         {
             return true;
