@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
