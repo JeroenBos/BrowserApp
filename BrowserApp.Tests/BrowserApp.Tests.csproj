@@ -8,6 +8,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <LangVersion>latest</LangVersion>
+    <WarningsAsErrors>NU1605, CS4014</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
