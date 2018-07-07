@@ -15,7 +15,6 @@ namespace BrowserApp
         /// If the first argument is null, that means 
         /// </summary>
         private readonly Func<int?, int> getNewWaitDuration;
-        private readonly Func<bool> resetQ;
         private TaskCompletionSource<object> tcs;
         private int currentDuration;
 
@@ -24,8 +23,9 @@ namespace BrowserApp
             Contract.Requires(getNewWaitDuration != null);
 
             this.getNewWaitDuration = getNewWaitDuration;
+            this.currentDuration = getNewWaitDuration(null);
         }
-        public AtMostOneAwaiter(int defaultDuration, float multiplier = 2, int? maxDuration =null) 
+        public AtMostOneAwaiter(int defaultDuration, float multiplier = 2, int? maxDuration = null)
             : this(getNewWaitDurationFunction(defaultDuration, multiplier, maxDuration))
         {
         }
@@ -53,26 +53,42 @@ namespace BrowserApp
         /// <returns></returns>
         public Task Wait()
         {
+            int waitDuration;
             lock (_lock)
             {
                 bool somebodyWasWaiting = this.tcs != null;
                 if (somebodyWasWaiting)
                 {
-                    this.tcs.SetResult(null);
-                    this.currentDuration = getNewWaitDuration(null);
+                    Reset();
+                    waitDuration = this.currentDuration;
                 }
                 else
                 {
-                    this.currentDuration = getNewWaitDuration(this.currentDuration);
+                    waitDuration = this.currentDuration;
+                    int nextWaitDuration = getNewWaitDuration(this.currentDuration);
+                    this.currentDuration = nextWaitDuration;
                 }
 
                 this.tcs = new TaskCompletionSource<object>();
             }
 
-            return Task.WhenAny(this.tcs.Task, Task.Delay(this.currentDuration));
+            Task wait = Task.Delay(waitDuration);
+            Task task = this.tcs.Task;
+            return Task.WhenAny(task, wait)
+                .ContinueWith(whenAnyTask =>
+                {
+                    lock (_lock)
+                    {
+                        if (whenAnyTask.Result == wait && this.tcs.Task == task)
+                        {
+                            this.tcs?.SetResult(null);
+                            this.tcs = null;
+                        }
+                    }
+                });
         }
         /// <summary>
-        /// If anybody is waiting, signals that it is finished, and resets the duration for which is waited.
+        /// If anybody is waiting, signals that it is finished, and resets the duration for which is waited the next time.
         /// </summary>
         public void Reset()
         {
