@@ -37,8 +37,8 @@ namespace BrowserApp.Tests.Mocks
         {
             logger.LogInfo("MockCommand: executing command");
             DelayDelta().Wait();
-            viewModel.Invoke("prop");
-            logger.LogInfo("MockCommand: invoked property change 'prop'");
+            viewModel.Invoke(nameof(MockViewModel.Prop));
+            logger.LogInfo($"MockCommand: invoked property change '{nameof(MockViewModel.Prop)}'");
         }
     }
 }
