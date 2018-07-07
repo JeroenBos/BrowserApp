@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using JBSnorro.Logging;
+using JBSnorro.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.Webpack;
@@ -27,10 +28,10 @@ namespace BrowserApp
         {
             services.AddMvc();
             var logger = new Logger();
-            var userSessionManager = new UserSessionManager(new TempUserSessionsStorage(), stream => new TempViewModel(), logger);
+            var userSessionManager = UserSessionManager.Create(new TempUserSessionsStorage(), stream => new TempViewModel(), logger);
             services.AddTransient(serviceProvider => userSessionManager);
         }
-        class TempUserSessionsStorage : IUserSessionsStorage
+        class TempUserSessionsStorage : IUserSessionsStorage<Stream>
         {
             public void CreateOrUpdate(string user, Stream data)
             {
@@ -39,6 +40,9 @@ namespace BrowserApp
             {
                 return Task.FromResult<Stream>(new MemoryStream());
             }
+
+            void IUserSessionsStorage.CreateOrUpdate(string user, object data) => CreateOrUpdate(user, (Stream)data);
+            Task<object> IUserSessionsStorage.TryOpen(string user) => TryOpen(user).Cast<object, Stream>();
         }
         class TempViewModel : INotifyPropertyChanged
         {
