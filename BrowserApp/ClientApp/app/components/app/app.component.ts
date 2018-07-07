@@ -15,7 +15,7 @@ export class AppComponent {
 
         this.changesPropagator = new ChangesPropagator(http, componentFactoryResolver, baseUrl);
 
-        this.changesPropagator.registerRequest();
+        this.changesPropagator.open();
     }
 }
 

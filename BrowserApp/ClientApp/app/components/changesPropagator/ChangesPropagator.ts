@@ -12,10 +12,20 @@ export class ChangesPropagator {
         private readonly baseUrl: string) {
     }
 
+    public async open(): Promise<void> {
+        console.log('opening viewmodel');
+        this.viewModels.clear();
+        this.post(this.baseUrl + 'api/Changes/open');
+    }
     public async registerRequest(): Promise<void> {
+
+        console.log('registering request');
+        this.post(this.baseUrl + 'api/Changes/RegisterRequest');
+    }
+
+    private async post(url: string) {
         try {
-            console.log('registering request');
-            const request = await this.http.post(this.baseUrl + 'api/Changes/RegisterRequest', {}).toPromise();
+            const request = await this.http.post(url, {}).toPromise();
             const response = request.json() as IResponse;
 
             console.log(response);
@@ -28,7 +38,9 @@ export class ChangesPropagator {
         catch (error) {
             console.error(error);
         }
+
     }
+
 
     private processResponse(response: IResponse) {
         // assumptions:
