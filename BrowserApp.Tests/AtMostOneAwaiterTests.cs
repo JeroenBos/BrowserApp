@@ -1,18 +1,13 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
+using static BrowserApp.Tests.Extensions;
 
 namespace BrowserApp.Tests
 {
     [TestClass]
     public class AtMostOneAwaiterTests
     {
-        /// <summary>
-        /// Returns a task that wait long enough to ensure that any task processing has been handled.
-        /// </summary>
-        private static Task DelayDelta()
-        {
-            return Task.Delay(10);
-        }
+ 
 
         [TestMethod]
         public async Task TaskSucceedsAfterDefaultDuration()

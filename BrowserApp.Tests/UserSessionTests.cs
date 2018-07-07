@@ -1,13 +1,9 @@
-﻿using BrowserApp.POCOs;
-using JBSnorro.Diagnostics;
-using JBSnorro.Logging;
+﻿using JBSnorro.Logging;
+using JBSnorro.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Input;
+using static BrowserApp.Tests.Extensions;
+using BrowserApp.Tests.Mocks;
 
 namespace BrowserApp.Tests
 {
@@ -22,13 +18,6 @@ namespace BrowserApp.Tests
         private static readonly Logger logger;
         private static readonly LoggerConsolePipe loggerPipe;
 
-        /// <summary>
-        /// Returns a task that wait long enough to ensure that any task processing has been handled.
-        /// </summary>
-        private static Task DelayDelta()
-        {
-            return Task.Delay(10);
-        }
         [TestMethod]
         public void CleanUserSessionFlushReturnsNothing()
         {
@@ -75,57 +64,21 @@ namespace BrowserApp.Tests
             var result = await wait;
             Assert.AreEqual(1, result.Changes.Length);
         }
-
-        class MockCommand : ICommand
+        [TestMethod]
+        public async Task ResetSucceedsPreviousAwaiter()
         {
-            private readonly ILogger logger;
-            private readonly MockViewModel viewModel;
-            public MockCommand(MockViewModel viewModel, ILogger logger)
-            {
-                Contract.Requires(viewModel != null);
-                Contract.Requires(logger != null);
-                this.viewModel = viewModel;
-                this.logger = logger;
-            }
-            public event EventHandler CanExecuteChanged;
+            AtMostOneAwaiter awaiter = new AtMostOneAwaiter(100);
+            Task wait = awaiter.Wait();
 
-            public bool CanExecute(object parameter)
-            {
-                return true;
-            }
+            await DelayDelta();
 
-            public void Execute(object parameter)
-            {
-                logger.LogInfo("MockCommand: executing command");
-                DelayDelta().Wait();
-                viewModel.Invoke("prop");
-                logger.LogInfo("MockCommand: invoked property change 'prop'");
-            }
+            awaiter.Reset();
+
+            await DelayDelta();
+
+            Assert.IsTrue(wait.IsCompletedSuccessfully);
         }
-        class MockViewModel : INotifyPropertyChanged
-        {
-            private string _prop;
-            public event PropertyChangedEventHandler PropertyChanged;
-            public string Prop
-            {
-                get { return _prop; }
-                set
-                {
-                    this._prop = value;
-                    Invoke("Prop");
-                }
-            }
-            public void Invoke(string propertyName)
-            {
-                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-    }
-    public static class Extensions
-    {
-        public static void ToConsole(this ILogger logger)
-        {
-            new LoggerConsolePipe(logger);
-        }
+
+        
     }
 }

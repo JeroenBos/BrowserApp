@@ -1,25 +1,17 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using JBSnorro.Extensions;
 using JBSnorro;
 using System.Linq;
-using System.Threading;
+using static BrowserApp.Tests.Extensions;
 
 namespace BrowserApp.Tests
 {
     [TestClass]
     public class ProcessingQueueTests
     {
-        /// <summary>
-        /// Returns a task that wait long enough to ensure that any task processing has been handled.
-        /// </summary>
-        private static Task DelayDelta()
-        {
-            return Task.Delay(10);
-        }
         [TestMethod]
         public async Task AddedItemCanBeDequeued()
         {
