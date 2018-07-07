@@ -93,30 +93,6 @@ namespace BrowserApp.Tests
             Assert.IsTrue(wait.IsCompletedSuccessfully);
         }
 
-        [TestMethod]
-        public async Task MultipleWaitAndFlushesWithoutChangesTakeSuccessivelyLonger()
-        {
-            const int waitsCount = 4;
-            const double relativeAllowedError = 0.5;
-            const int defaultDuration = 100;
-            const float multiplier = 2f;
-            AtMostOneAwaiter awaiter = new AtMostOneAwaiter(defaultDuration, multiplier);
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
-
-            IReadOnlyList<long> durations = await RunSuccessively(waitsCount, async () =>
-            {
-                await awaiter.Wait();
-                long duration = watch.ElapsedMilliseconds;
-                watch.Restart();
-                return duration;
-            });
-
-            for (int i = 0; i < waitsCount; i++)
-            {
-                double expectedDuration = Math.Pow(multiplier, i) * defaultDuration;
-                Assert.AreEqual(expectedDuration, durations[i], durations[i] * relativeAllowedError);
-            }
-        }
+        
     }
 }
