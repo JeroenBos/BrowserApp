@@ -19,7 +19,11 @@ namespace BrowserApp.Tests.Mocks
             this.viewModel = viewModel;
             this.logger = logger;
         }
-        public event EventHandler CanExecuteChanged;
+        public event EventHandler CanExecuteChanged
+        {
+            add { throw new NotSupportedException(); }
+            remove { }
+        }
 
         public bool CanExecute(object parameter)
         {
