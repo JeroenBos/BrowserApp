@@ -59,6 +59,7 @@ namespace BrowserApp
                 bool somebodyWasWaiting = this.tcs != null;
                 if (somebodyWasWaiting)
                 {
+                    Pulse();
                     Reset();
                     waitDuration = this.currentDuration;
                 }
@@ -72,6 +73,7 @@ namespace BrowserApp
                 this.tcs = new TaskCompletionSource<object>();
             }
 
+            Console.WriteLine("waiting for " + waitDuration);
             Task wait = Task.Delay(waitDuration);
             Task task = this.tcs.Task;
             return Task.WhenAny(task, wait)
@@ -88,13 +90,22 @@ namespace BrowserApp
                 });
         }
         /// <summary>
-        /// If anybody is waiting, signals that it is finished, and resets the duration for which is waited the next time.
+        /// Resets the duration for which is waited the next time.
         /// </summary>
         public void Reset()
         {
             lock (_lock)
             {
                 this.currentDuration = getNewWaitDuration(null);
+            }
+        }
+        /// <summary>
+        /// If anybody is waiting, signals that it is finished.
+        /// </summary>
+        public void Pulse()
+        {
+            lock (_lock)
+            {
                 this.tcs?.SetResult(null);
                 this.tcs = null;
             }

@@ -78,21 +78,6 @@ namespace BrowserApp.Tests
             var result = await wait;
             Assert.AreEqual(1, result.Changes.Length);
         }
-        [TestMethod]
-        public async Task ResetSucceedsPreviousAwaiter()
-        {
-            AtMostOneAwaiter awaiter = new AtMostOneAwaiter(100);
-            Task wait = awaiter.Wait();
-
-            await DelayDelta();
-
-            awaiter.Reset();
-
-            await DelayDelta();
-
-            Assert.IsTrue(wait.IsCompletedSuccessfully);
-        }
-
         
     }
 }

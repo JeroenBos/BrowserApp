@@ -54,14 +54,14 @@ namespace BrowserApp.Tests
             Assert.IsTrue(!secondWait.IsCompletedSuccessfully);
         }
         [TestMethod]
-        public async Task ResetSucceedsPreviousAwaiter()
+        public async Task PulseSucceedsPreviousAwaiter()
         {
             AtMostOneAwaiter awaiter = new AtMostOneAwaiter(100);
             Task wait = awaiter.Wait();
 
             await DelayDelta();
 
-            awaiter.Reset();
+            awaiter.Pulse();
 
             await DelayDelta();
 
