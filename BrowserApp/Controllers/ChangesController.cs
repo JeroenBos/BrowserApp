@@ -29,15 +29,16 @@ namespace BrowserApp.Controllers
             return userSession.Flush();
         }
         [HttpPost("[action]")]
-        public Task<object> ExecuteCommand()
+        public async Task<object> ExecuteCommand()
         {
-            return RegisterRequest();
+            var userSession = await this.userSessionManager.GetOrCreateSessionAsync(User);
+            userSession.ExecuteCommand(new DummyCommand(userSession));
+            return await userSession.FlushOrWait();
         }
         [HttpPost("[action]")]
         public async Task<object> RegisterRequest()
         {
             var userSession = await this.userSessionManager.GetOrCreateSessionAsync(User);
-            userSession.ExecuteCommand(new DummyCommand(userSession));
             return await userSession.FlushOrWait();
         }
     }
