@@ -15,9 +15,17 @@ namespace BrowserApp.Tests
         {
             return Task.Delay(10);
         }
-        public static void ToConsole(this ILogger logger)
+        /// <summary>
+        /// Successively executed the specified number of tasks.
+        /// </summary>
+        public static async Task<List<T>> RunSuccessively<T>(int count, Func<Task<T>> func)
         {
-            new LoggerConsolePipe(logger);
+            List<T> result = new List<T>();
+            for (int i = 0; i < count; i++)
+            {
+                result.Add(await func());
+            }
+            return result;
         }
     }
 }
