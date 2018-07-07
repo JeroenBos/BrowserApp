@@ -34,6 +34,11 @@ namespace BrowserApp
             registerViewModel(viewModel);
         }
 
+        private void registerViewmodelAndAddCompleteStateAsChanges(object viewModel)
+        {
+            registerViewModel(viewModel);
+            AddCompleteStateAsChanges(viewModel);
+        }
         private void registerViewModel(object viewModel)
         {
             Contract.Requires(viewModel != null);
@@ -42,7 +47,6 @@ namespace BrowserApp
                                                                                                                // Although then removal will be tricky: suppose the first is removed, then the second couldn't be found anymore
             VisitViewModels(viewModel, createId);
             VisitViewModels(viewModel, registerEvents);
-            AddCompleteStateAsChanges(viewModel);
 
             void createId(object viewModelNode)
             {
@@ -99,7 +103,7 @@ namespace BrowserApp
                 }
                 if (m.NewValue != null)
                 {
-                    this.registerViewModel(m.NewValue);
+                    this.registerViewmodelAndAddCompleteStateAsChanges(m.NewValue);
                 }
             }
 
@@ -124,7 +128,7 @@ namespace BrowserApp
                     change = CollectionItemAdded.Create(senderId, e.NewItems[0], e.NewStartingIndex == -1 ? default(int?) : e.NewStartingIndex);
                     if (IncludeDeep(sender, item: e.NewItems[0]))
                     {
-                        registerViewModel(e.NewItems[0]);
+                        registerViewmodelAndAddCompleteStateAsChanges(e.NewItems[0]);
                     }
                     break;
                 case NotifyCollectionChangedAction.Move:
