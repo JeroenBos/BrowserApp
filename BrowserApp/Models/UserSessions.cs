@@ -15,6 +15,7 @@ namespace BrowserApp
 {
     public class UserSession
     {
+        private static readonly bool alwaysRerequest = false;
         public object ViewModelRoot { get; }
         internal View View { get; }
         private readonly object _lock = new object();
@@ -25,6 +26,8 @@ namespace BrowserApp
 
         public void ExecuteCommand(ICommand command)
         {
+            this.waiter.Reset();
+
             lock (_lock)
             {
                 commands.Enqueue(command);
@@ -38,15 +41,13 @@ namespace BrowserApp
         internal async Task<Response> FlushOrWait()
         {
             logger.LogInfo("UserSession: Flushing or waiting");
-            this.waiter.Reset();
 
             lock (_lock)
             {
-                var changes = this.changes.Clear().ToArray();
-
-                if (changes.Length != 0)
+                Response flush = Flush();
+                if (flush.Changes.Length != 0)
                 {
-                    return new Response(this.commands.Count != 0, changes);
+                    return flush;
                 }
             }
 
@@ -65,8 +66,12 @@ namespace BrowserApp
             lock (_lock)
             {
                 var changes = this.changes.Clear().ToArray();
+                if (changes.Length != 0)
+                {
+                    this.waiter.Reset();
+                }
 
-                return new Response(this.commands.Count != 0, changes);
+                return new Response(alwaysRerequest || this.commands.Count != 0, changes);
             }
         }
         internal void RegisterChange(Change change)
