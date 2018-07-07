@@ -7,8 +7,6 @@ namespace BrowserApp.Tests
     [TestClass]
     public class AtMostOneAwaiterTests
     {
- 
-
         [TestMethod]
         public async Task TaskSucceedsAfterDefaultDuration()
         {
@@ -18,7 +16,7 @@ namespace BrowserApp.Tests
 
             await DelayDelta();
 
-            Assert.IsFalse(!wait.IsCompleted);
+            Assert.IsFalse(wait.IsCompleted);
 
             Task firstFinishedTask = await Task.WhenAny(wait, Task.Delay(2 * duration));
 
