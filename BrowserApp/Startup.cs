@@ -16,17 +16,27 @@ namespace BrowserApp
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public IConfiguration Configuration { get; }
+        public IHostingEnvironment Environment { get; }
+
+        public Startup(IConfiguration configuration, IHostingEnvironment environment)
         {
             Configuration = configuration;
+            Environment = environment;
         }
-
-        public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            if (Environment.IsDevelopment())
+            {
+                services.AddMvc(config => config.Filters.Add(typeof(CustomExceptionFilter)));
+            }
+            else
+            {
+                services.AddMvc();
+            }
+
             var logger = new Logger();
             var userSessionManager = UserSessionManager.Create(new TempUserSessionsStorage(), stream => new TempViewModel(), logger);
             services.AddTransient(serviceProvider => userSessionManager);
@@ -46,7 +56,20 @@ namespace BrowserApp
         }
         class TempViewModel : INotifyPropertyChanged
         {
+            private int count;
             public event PropertyChangedEventHandler PropertyChanged;
+            public int Count
+            {
+                get => count;
+                set
+                {
+                    if (count != value)
+                    {
+                        this.count = value;
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
+                    }
+                }
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
