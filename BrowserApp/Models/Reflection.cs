@@ -152,7 +152,9 @@ namespace BrowserApp
         {
             Contract.Requires(container != null);
 
-            return container.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            return container.GetType()
+                            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                            .Where(property => !property.HasAttribute<NoViewBindingAttribute>());
         }
         public static IEnumerable<object> GetIncludedItems(INotifyCollectionChanged collection)
         {
@@ -195,5 +197,11 @@ namespace BrowserApp
                 }
             }
         }
+    }
+
+    [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
+    public class NoViewBindingAttribute : Attribute
+    {
+
     }
 }
