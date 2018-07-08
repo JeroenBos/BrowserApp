@@ -24,6 +24,9 @@ namespace BrowserApp
         public int this[object obj] => this.map[obj];
         public object this[int id] => this.map[id];
 
+        public bool TryGetKey(object value, out int key) => this.map.TryGetKey(value, out key);
+        public bool TryGetValue(int key, out object value) => this.map.TryGetValue(key, out value);
+
         public void Add(object obj) => this.map.Add(Interlocked.Increment(ref this.idCounter), obj);
         public void Remove(int id) => this.map.Remove(id);
         public void Remove(object obj) => this.map.Remove(obj);

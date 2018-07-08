@@ -23,6 +23,9 @@ namespace BrowserApp
         int this[object obj] { get; }
         object this[int obj] { get; }
 
+        bool TryGetKey(object value, out int key);
+        bool TryGetValue(int key, out object value);
+
         bool Contains(object obj);
         bool Contains(int id);
 
