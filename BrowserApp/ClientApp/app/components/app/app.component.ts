@@ -8,7 +8,7 @@ import { ChangesPropagator } from '../changesPropagator/ChangesPropagator';
     styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-    private readonly changesPropagator: ChangesPropagator;
+    public readonly changesPropagator: ChangesPropagator;
     constructor(http: Http,
         componentFactoryResolver: ComponentFactoryResolver,
         @Inject('BASE_URL') baseUrl: string) {

@@ -22,10 +22,14 @@ export class ChangesPropagator {
         console.log('registering request');
         this.post(this.baseUrl + 'api/Changes/RegisterRequest');
     }
+    public async executeCommand(commandId: number) {
+        console.log('executing command ');
+        this.post(this.baseUrl + 'api/Changes/ExecuteCommand', commandId);
+    }
 
-    private async post(url: string) {
+    private async post(url: string, data: any = {}) {
         try {
-            const request = await this.http.post(url, {}).toPromise();
+            const request = await this.http.post(url, data).toPromise();
             const response = request.json() as IResponse;
 
             console.log(response);
