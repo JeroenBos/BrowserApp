@@ -117,4 +117,11 @@ namespace BrowserApp.POCOs
         public int Index1 { get; set; }
         public int Index2 { get; set; }
     }
+
+    public sealed class CommandInstruction
+    {
+        public int CommandId { get; set; }
+        public int ViewModelId { get; set; }
+        public object EventArgs { get; set; }
+    }
 }
