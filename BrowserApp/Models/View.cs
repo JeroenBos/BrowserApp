@@ -123,13 +123,13 @@ namespace BrowserApp
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
-                    if (e.NewItems.Count != 0) { throw new NotImplementedException(); }
+                    if (e.NewItems.Count != 1) { throw new NotImplementedException(); }
                     Contract.Requires(e.NewStartingIndex >= 0, "The index of the added item(s) must be specified");
-                    change = CollectionItemAdded.Create(senderId, e.NewItems[0], e.NewStartingIndex == -1 ? default(int?) : e.NewStartingIndex);
                     if (IncludeDeep(sender, item: e.NewItems[0]))
                     {
                         registerViewmodelAndAddCompleteStateAsChanges(e.NewItems[0]);
                     }
+                    change = CollectionItemAdded.Create(senderId, e.NewItems[0], idProvider, e.NewStartingIndex == -1 ? default(int?) : e.NewStartingIndex);
                     break;
                 case NotifyCollectionChangedAction.Move:
                     throw new NotImplementedException();
