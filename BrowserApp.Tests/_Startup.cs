@@ -8,9 +8,15 @@ namespace BrowserApp.Tests
 {
     class _Startup
     {
-        public static async Task Main(string[] args)
+        static void Main(string[] args)
         {
-            await new UserSessionTests().PropertyChangeIsFlushed();
+            new CommandManagerTests().TestSimpleCommandRegistration();
+
+            Task.Run(() => main(args)).GetAwaiter().GetResult();
+        }
+        static async Task main(string[] args)
+        {
+            // await new UserSessionTests().PropertyChangeIsFlushed();
         }
     }
 }
