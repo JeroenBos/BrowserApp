@@ -8,12 +8,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
 using System;
+using BrowserApp.POCOs;
 
 namespace BrowserApp.Tests
 {
     [TestClass]
     public class UserSessionTests
     {
+        private static object emptyEventArgs => new object();
         static UserSessionTests()
         {
             logger = new Logger();
@@ -65,19 +67,58 @@ namespace BrowserApp.Tests
             Assert.IsTrue(firstWait.IsCompleted);
         }
         [TestMethod]
+        public async Task NewUserSessionsAddsRootViewModel()
+        {
+            var userSession = new UserSession(new MockViewModel(), logger);
+            userSession.CommandManager.Add(new MockCommand(logger), typeof(object));
+
+            Task task = userSession.ExecuteCommand(0, 0, emptyEventArgs, null);
+            await task;
+
+            Assert.IsTrue(task.IsCompletedSuccessfully);
+        }
+        [TestMethod, ExpectedException(typeof(InvalidOperationException))]
+        public async Task ExecutingNonExistingCommandFails()
+        {
+            var userSession = new UserSession(new MockViewModel(), logger);
+            userSession.CommandManager.Add(new MockCommand(logger), typeof(object));
+
+            Task task = userSession.ExecuteCommand(2, 0, emptyEventArgs, null);
+            await task;
+
+            Assert.IsTrue(task.IsFaulted);
+        }
+        [TestMethod, ExpectedException(typeof(InvalidOperationException))]
+        public async Task ExecutingCommandOnNonExistingViewModelFails()
+        {
+            var userSession = new UserSession(new MockViewModel(), logger);
+            userSession.CommandManager.Add(new MockCommand(logger), typeof(object));
+
+            await userSession.ExecuteCommand(0, 2, emptyEventArgs, null);
+        }
+        [TestMethod, ExpectedException(typeof(TaskCanceledException))]
+        public async Task ExecutingNonExecutableCommandCancels()
+        {
+            var userSession = new UserSession(new MockViewModel(), logger);
+            userSession.CommandManager.Add(new UnexecutableMockCommand(logger), typeof(object));
+
+            await userSession.ExecuteCommand(0, 0, emptyEventArgs, null);
+        }
+        [TestMethod]
         public async Task PropertyChangeIsFlushed()
         {
             const int t = 100;
             var viewModel = new MockViewModel();
             var userSession = new UserSession(viewModel, logger, new AtMostOneAwaiter(t * 2));
+            userSession.CommandManager.Add(new MockCommand(logger), typeof(object));
 
             var wait = userSession.FlushOrWait();
-
-            userSession.ExecuteCommand(new MockCommand(viewModel, logger));
+            var task = userSession.ExecuteCommand(new CommandInstruction() { CommandId = 0, ViewModelId = 0, EventArgs = emptyEventArgs }, null);
 
             var result = await wait;
+            Assert.IsTrue(task.IsCompleted);
             Assert.AreEqual(1, result.Changes.Length);
         }
-        
+
     }
 }

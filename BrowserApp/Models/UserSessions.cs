@@ -10,27 +10,36 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Input;
 using JBSnorro.Logging;
+using System.Security.Claims;
 
 namespace BrowserApp
 {
-    public class UserSession
+    public sealed class UserSession
     {
         private static readonly bool alwaysRerequest = false;
         public object ViewModelRoot { get; }
+        public CommandManager CommandManager { get; }
         internal View View { get; }
         private readonly object _lock = new object();
         private readonly ThreadSafeList<Change> changes = new ThreadSafeList<Change>();
-        private readonly ProcessingQueue<ICommand> commands;
+        private readonly ProcessingQueue<UserCommandInstruction> commands;
         private readonly AtMostOneAwaiter waiter;
         private readonly ILogger logger;
+        internal readonly IIdProvider viewModelIdProvider;
 
-        public void ExecuteCommand(ICommand command)
+        public Task ExecuteCommand(int commandId, int viewModelId, object eventArgs, ClaimsPrincipal user)
         {
+            return ExecuteCommand(new CommandInstruction() { CommandId = commandId, ViewModelId = viewModelId, EventArgs = eventArgs }, user);
+        }
+        public Task ExecuteCommand(CommandInstruction instruction, ClaimsPrincipal user)
+        {
+            var result = new UserCommandInstruction(instruction, user, this.viewModelIdProvider);
             lock (_lock)
             {
-                commands.Enqueue(command);
+                commands.Enqueue(result);
             }
             logger.LogInfo("UserSession: Enqueued command as eligible");
+            return result.Task;
         }
         /// <summary>
         /// Returns a response with all non-propagated changes if there are any,
@@ -75,7 +84,7 @@ namespace BrowserApp
                 return new Response(alwaysRerequest || this.commands.Count != 0, changes);
             }
         }
-        internal void RegisterChange(Change change)
+        private void RegisterChange(Change change)
         {
             logger.LogInfo("UserSession: registering change");
 
@@ -92,40 +101,112 @@ namespace BrowserApp
 
             this.logger = logger;
             this.ViewModelRoot = viewModelRoot;
-            this.View = new View(viewModelRoot, this.RegisterChange, new IdProvider());
-            this.commands = new ProcessingQueue<ICommand>(() => Task.Run(this.worker));
+            this.viewModelIdProvider = new IdProvider();
+            this.CommandManager = new CommandManager();
+            this.View = new View(viewModelRoot, this.RegisterChange, viewModelIdProvider);
+            this.commands = new ProcessingQueue<UserCommandInstruction>(() => Task.Run(this.worker));
             this.waiter = waiter ?? new AtMostOneAwaiter(defaultDuration: _10ms, maxDuration: _5minutes);
         }
 
         private void worker()
         {
-            while (commands.TryDequeue(out ICommand command))
+            while (commands.TryDequeue(out UserCommandInstruction instruction))
             {
+                bool success = false;
                 logger.LogInfo("UserSession: Dequeued command");
                 try
                 {
-                    command.Execute(null);
+                    if (instruction.ViewModel == null)
+                    {
+                        throw new InvalidOperationException($"UserSession: Command failed: View model with id {instruction.ViewModelId} was not found");
+                    }
+                    else if (!CommandManager.Exists(instruction.CommandId))
+                    {
+                        throw new InvalidOperationException($"UserSession: Command failed: Command with id {instruction.CommandId} was not found");
+                    }
+                    else if (!CommandManager.IsAuthorized(instruction.User, instruction.CommandId))
+                    {
+                        throw new UnauthorizedAccessException($"UserSession: Command failed: The user is unauthorized to execute command {instruction.CommandId})");
+                    }
+                    else if (!CommandManager.CanExecute(instruction.User, instruction.CommandId, instruction.ViewModel, instruction.EventArgs))
+                    {
+                        logger.LogWarning("UserSession: Command not executed");
+                        instruction.tcs.TrySetCanceled();
+                    }
+                    else
+                    {
+                        CommandManager.Execute(instruction.User, instruction.CommandId, instruction.ViewModel, instruction.EventArgs);
+                        instruction.tcs.TrySetResult(null);
+                        success = true;
+                    }
                 }
                 catch (Exception e)
                 {
-                    logger.LogError($"UserSession: Command failed: {e.Message}");
-                    throw;
+                    // We catch the exception here and propagate it to the context that initiated the command execution via the task completion source.
+                    // If nobody is listening then nobody cares. In any case this simple worker thread doesn't care
+                    logger.LogError($"{e.GetType().Name}: {e.Message}");
+                    instruction.tcs.TrySetException(e);
                 }
                 finally
                 {
-                    commands.OnProcessed(command);
+                    try
+                    {
+                        commands.OnProcessed(instruction);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogError($"{e.GetType().Name}: UserSession.OnProcessed(command): {e.Message}");
+                    }
+                }
 
+                if (success)
+                {
                     if (this.changes.Count != 0)
                     {
-                        logger.LogInfo("UserSession: Command completed. Pulsing. ");
+                        logger.LogInfo("UserSession: Command completed. Pulsing");
                         this.waiter.Pulse();
                     }
                     else
                     {
-                        logger.LogInfo("UserSession: Command completed. ");
+                        logger.LogInfo("UserSession: Command completed");
                     }
                 }
             }
         }
+
+        private sealed class UserCommandInstruction
+        {
+            internal readonly TaskCompletionSource<object> tcs;
+            public int CommandId { get; }
+            public int ViewModelId { get; }
+            public object EventArgs { get; }
+            public ClaimsPrincipal User { get; }
+            /// <summary>
+            /// Gets the view model associated with <see cref="CommandId"/> and <see cref="User"/>; or null in case no such view model was found.
+            /// </summary>
+            public object ViewModel { get; }
+            public Task Task => tcs.Task;
+
+            public UserCommandInstruction(int commandId, int viewModelId, object eventArgs, ClaimsPrincipal user, IIdProvider viewModelResolver)
+            {
+                Contract.Requires(viewModelResolver != null);
+
+                this.User = user;
+                this.CommandId = commandId;
+                this.ViewModelId = viewModelId;
+                this.EventArgs = eventArgs;
+                this.tcs = new TaskCompletionSource<object>();
+
+                viewModelResolver.TryGetValue(this.ViewModelId, out object viewModel);
+                this.ViewModel = viewModel; // possibly reassigns null 
+            }
+            public UserCommandInstruction(CommandInstruction instruction, ClaimsPrincipal user, IIdProvider viewModelResolver)
+                : this(instruction.CommandId, instruction.ViewModelId, instruction.EventArgs, user, viewModelResolver)
+            {
+                Contract.Requires(instruction != null);
+
+            }
+        }
     }
+
 }

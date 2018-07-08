@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace BrowserApp
 {
+    /// <summary>
+    /// A delegate that creates a view model root and populates the command manager with commands.
+    /// </summary>
     public delegate object ViewModelFactoryDelegate<in TData>(TData data);
     public sealed class UserSessionManager
     {

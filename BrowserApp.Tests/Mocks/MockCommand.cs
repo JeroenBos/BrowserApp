@@ -12,15 +12,7 @@ namespace BrowserApp.Tests.Mocks
     class MockCommand : ICommand
     {
         private readonly ILogger logger;
-        private readonly MockViewModel viewModel;
-        [DebuggerHidden]
-        public MockCommand(MockViewModel viewModel, ILogger logger)
-        {
-            Contract.Requires(viewModel != null);
-            Contract.Requires(logger != null);
-            this.viewModel = viewModel;
-            this.logger = logger;
-        }
+
         public event EventHandler CanExecuteChanged
         {
             add { throw new NotSupportedException(); }
@@ -28,17 +20,33 @@ namespace BrowserApp.Tests.Mocks
         }
 
         [DebuggerHidden]
-        public bool CanExecute(object parameter)
+        public MockCommand(ILogger logger)
         {
-            return true;
+            Contract.Requires(logger != null);
+
+            this.logger = logger;
         }
 
-        public void Execute(object parameter)
+        [DebuggerHidden]
+        public virtual bool CanExecute(MockViewModel viewModel, object parameter) => true;
+        public void Execute(MockViewModel viewModel, object parameter)
         {
             logger.LogInfo("MockCommand: executing command");
             DelayDelta().Wait();
+            logger.LogInfo("MockCommand: waited delta");
             viewModel.Invoke(nameof(MockViewModel.Prop));
             logger.LogInfo($"MockCommand: invoked property change '{nameof(MockViewModel.Prop)}'");
         }
+
+        [DebuggerHidden]
+        bool ICommand.CanExecute(object viewModel, object eventArgs) => CanExecute((MockViewModel)viewModel, eventArgs);
+        [DebuggerHidden]
+        void ICommand.Execute(object viewModel, object eventArgs) => Execute((MockViewModel)viewModel, eventArgs);
+    }
+    class UnexecutableMockCommand : MockCommand
+    {
+        public UnexecutableMockCommand(ILogger logger) : base(logger) { }
+
+        public override bool CanExecute(MockViewModel viewModel, object parameter) => false;
     }
 }

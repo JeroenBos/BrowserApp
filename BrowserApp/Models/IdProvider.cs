@@ -1,4 +1,5 @@
-﻿using JBSnorro.Collections;
+﻿using JBSnorro;
+using JBSnorro.Collections;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +15,12 @@ namespace BrowserApp
 
         public IdProvider(IEqualityComparer<object> equalityComparer = null)
         {
+            equalityComparer = equalityComparer ?? Global.ReferenceEqualityComparer;
             this.map = new WeakTwoWayDictionary<int, object>(equalityComparer);
         }
         public IdProvider(int autoCleanup, IEqualityComparer<object> equalityComparer = null)
         {
+            equalityComparer = equalityComparer ?? Global.ReferenceEqualityComparer;
             this.map = new WeakTwoWayDictionary<int, object>(equalityComparer, autoCleanup);
         }
 
