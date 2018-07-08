@@ -9,7 +9,7 @@ namespace BrowserApp
 {
     internal sealed class IdProvider : IIdProvider
     {
-        private int idCounter;
+        private int idCounter = -1;
         private readonly WeakTwoWayDictionary<int, object> map;
 
         public IdProvider(IEqualityComparer<object> equalityComparer = null)
