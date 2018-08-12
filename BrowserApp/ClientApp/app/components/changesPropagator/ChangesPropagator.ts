@@ -4,9 +4,10 @@ import { forEach } from '@angular/router/src/utils/collection';
 import 'rxjs/add/operator/toPromise';
 import { AsynchronousCollectionEditorSolver } from './AsynchronousCollectionEditorSolver';
 import { isComponentView } from '@angular/core/src/view/util';
+import { BaseViewModel } from '../base.component';
+import { CommandInstruction } from '../../commands/commands';
 
-export interface IComponent {
-    __id: number;
+export interface IComponent extends BaseViewModel {
     [propertyName: string]: any;
 }
 export function isComponent(obj: any): obj is IComponent {
@@ -20,7 +21,7 @@ export function assert(expr: boolean, message = "Assertion failed") {
 export class ChangesPropagator {
     /** A map from component id to component. */
     private readonly components = new Map<number, IComponent>();
-    private readonly collectionEditor: AsynchronousCollectionEditorSolver = new AsynchronousCollectionEditorSolver((component, id) => component.__id = id);
+    public readonly collectionEditor: AsynchronousCollectionEditorSolver = new AsynchronousCollectionEditorSolver((component, id) => component.__id = id);
 
     constructor(
         private readonly http: Http,
@@ -50,11 +51,14 @@ export class ChangesPropagator {
     public async registerRequest(): Promise<void> {
         this.post(this.baseUrl + 'api/Changes/RegisterRequest');
     }
-    public async executeCommand(commandId: number) {
-        this.post(this.baseUrl + 'api/Changes/ExecuteCommand', commandId);
+    public async executeCommand(command: CommandInstruction) {
+        if (command == null || command.commandId < 0 || command.viewModelId < 0 || command.eventArgs == null) {
+            throw new Error("Invalid command instruction");
+        }
+        this.post(this.baseUrl + 'api/Changes/ExecuteCommand', command);
     }
 
-    private async post(url: string, data?: number) {
+    private async post(url: string, data?: CommandInstruction) {
         try {
             console.log(`posting '${data === undefined ? '{}' : data}' to '${url.substr(this.baseUrl.length)}'. Response: `);
             const request = await this.http.post(url, data || {}).toPromise();
