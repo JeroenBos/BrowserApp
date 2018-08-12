@@ -109,6 +109,7 @@ namespace BrowserApp
             this.View = new View(viewModelRoot, this.RegisterChange, viewModelIdProvider);
             this.commands = new ProcessingQueue<UserCommandInstruction>(() => Task.Run(this.worker));
             this.waiter = waiter ?? new AtMostOneAwaiter(defaultDuration: _10ms, maxDuration: _5minutes);
+            SpecificCode.Initialize(this.CommandManager);
         }
 
         private void worker()

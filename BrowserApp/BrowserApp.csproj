@@ -33,6 +33,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\SpecificCode.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="SpecificCode.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="JBSnorro">
       <HintPath>..\..\..\ASDE\JBSnorro\bin\Debug\JBSnorro.dll</HintPath>
     </Reference>
