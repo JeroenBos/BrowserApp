@@ -48,12 +48,9 @@ export class ChangesPropagator {
         this.post(this.baseUrl + 'api/Changes/open');
     }
     public async registerRequest(): Promise<void> {
-
-        console.log('registering request');
         this.post(this.baseUrl + 'api/Changes/RegisterRequest');
     }
     public async executeCommand(commandId: number) {
-        console.log('executing command ');
         this.post(this.baseUrl + 'api/Changes/ExecuteCommand', commandId);
     }
 
