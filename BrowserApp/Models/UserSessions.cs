@@ -33,6 +33,9 @@ namespace BrowserApp
         }
         public Task ExecuteCommand(CommandInstruction instruction, ClaimsPrincipal user)
         {
+            // check and throw here because were about to transfer to another thread, which makes debugging more difficult
+            instruction.CheckInvariants(logger);
+
             var result = new UserCommandInstruction(instruction, user, this.viewModelIdProvider);
             lock (_lock)
             {
@@ -106,6 +109,7 @@ namespace BrowserApp
             this.View = new View(viewModelRoot, this.RegisterChange, viewModelIdProvider);
             this.commands = new ProcessingQueue<UserCommandInstruction>(() => Task.Run(this.worker));
             this.waiter = waiter ?? new AtMostOneAwaiter(defaultDuration: _10ms, maxDuration: _5minutes);
+            SpecificCode.Initialize(this.CommandManager);
         }
 
         private void worker()

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
-    <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>3.0</TypeScriptToolsVersion>
     <IsPackable>false</IsPackable>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
@@ -30,6 +30,14 @@
     <EmbeddedResource Remove="wwwroot\dist\**" />
     <None Remove="ClientApp\dist\**" />
     <None Remove="wwwroot\dist\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Models\SpecificCode.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="SpecificCode.cs" />
   </ItemGroup>
 
   <ItemGroup>

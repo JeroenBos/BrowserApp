@@ -22,11 +22,16 @@ namespace BrowserApp
         private readonly Dictionary<string, UserSession> cachedSessions = new Dictionary<string, UserSession>();
         private readonly ILogger logger;
 
-        public static UserSessionManager Create<TData>(IUserSessionsStorage<TData> userSessionStorage, ViewModelFactoryDelegate<TData> createInitialViewModelRoot, ILogger logger)
+        public static UserSessionManager Create<TData>(IUserSessionsStorage<TData> userSessionStorage, 
+                                                       ViewModelFactoryDelegate<TData> createInitialViewModelRoot, 
+                                                       ILogger logger)
         {
             return new UserSessionManager(userSessionStorage, data => createInitialViewModelRoot((TData)data), logger);
         }
-        private UserSessionManager(IUserSessionsStorage userSessionsStorage, ViewModelFactoryDelegate<object> createInitialViewModelRoot, ILogger logger, Type createInitiViewModelTypeArg)
+        private UserSessionManager(IUserSessionsStorage userSessionsStorage, 
+                                   ViewModelFactoryDelegate<object> createInitialViewModelRoot,
+                                   ILogger logger, 
+                                   Type createInitiViewModelTypeArg)
             : this(userSessionsStorage, createInitialViewModelRoot, logger)
         {
             Contract.Requires(createInitialViewModelRoot != null);

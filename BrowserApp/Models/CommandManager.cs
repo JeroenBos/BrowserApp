@@ -45,7 +45,7 @@ namespace BrowserApp
             this._commands = new ObservableCollection<CommandViewModel>();
             this.commands = new ReadOnlyObservableCollection<CommandViewModel>(_commands);
         }
-        
+
         public int Add<TViewModel, TEventArgs>(ICommand<TViewModel, TEventArgs> command)
         {
             return Add(command, typeof(TViewModel));
@@ -78,7 +78,7 @@ namespace BrowserApp
             }
             else
             {
-                this._commands.Add(new CommandViewModel(this, command, isAuthorized, viewModelTypes.ToList()));
+                this._commands.Add(new CommandViewModel(this, command, isAuthorized, viewModelTypes));
                 return commands.Count - 1;
             }
         }
@@ -154,7 +154,10 @@ namespace BrowserApp
         [UsedImplicitly]
         public int CommandId => manager.GetIdOf(this);
 
-        internal CommandViewModel(CommandManager manager, ICommand command, Func<ClaimsPrincipal, bool> isAuthorized, List<Type> viewModelTypes)
+        internal CommandViewModel(CommandManager manager,
+                                  ICommand command,
+                                  Func<ClaimsPrincipal, bool> isAuthorized,
+                                  IList<Type> viewModelTypes)
         {
             Contract.Requires(manager != null);
             Contract.Requires(command != null);
