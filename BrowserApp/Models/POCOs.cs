@@ -1,5 +1,6 @@
 ﻿using JBSnorro;
 using JBSnorro.Diagnostics;
+using JBSnorro.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -117,11 +118,41 @@ namespace BrowserApp.POCOs
         public int Index1 { get; set; }
         public int Index2 { get; set; }
     }
-
+    [Serializable]
     public sealed class CommandInstruction
     {
         public int CommandId { get; set; }
         public int ViewModelId { get; set; }
         public object EventArgs { get; set; }
+    }
+    public static class CommandInstructionExtensions
+    {
+        public static void CheckInvariants(this CommandInstruction commandInstruction, ILogger logger)
+        {
+            string error = null;
+            if (commandInstruction == null)
+            {
+                error = "command instruction was null";
+            }
+            else if (commandInstruction.CommandId < 0)
+            {
+                error = "A negative command id was specified";
+            }
+            else if (commandInstruction.EventArgs == null)
+            {
+                error = "The event args on the command instruction was null";
+            }
+            else if (commandInstruction.ViewModelId < 0)
+            {
+                error = "A negative view model id was specified";
+            }
+
+            if (error != null)
+            {
+                logger?.LogError(error);
+                throw new ArgumentException(error, nameof(commandInstruction));
+            }
+        }
+
     }
 }

@@ -33,6 +33,9 @@ namespace BrowserApp
         }
         public Task ExecuteCommand(CommandInstruction instruction, ClaimsPrincipal user)
         {
+            // check and throw here because were about to transfer to another thread, which makes debugging more difficult
+            instruction.CheckInvariants(logger);
+
             var result = new UserCommandInstruction(instruction, user, this.viewModelIdProvider);
             lock (_lock)
             {
