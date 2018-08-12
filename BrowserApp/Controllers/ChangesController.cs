@@ -30,7 +30,7 @@ namespace BrowserApp.Controllers
         public async Task<object> ExecuteCommand(CommandInstruction instruction)
         {
             var userSession = await this.userSessionManager.GetOrCreateSessionAsync(this.User);
-            userSession.ExecuteCommand(instruction, this.User);
+            await userSession.ExecuteCommand(instruction, this.User);
             return await userSession.FlushOrWait();
         }
         [HttpPost("[action]")]

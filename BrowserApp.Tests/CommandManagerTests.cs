@@ -29,6 +29,12 @@ namespace BrowserApp.Tests
             this.Initialize();
         }
 
+
+        [TestMethod]
+        public void TestCommandManagerAdd()
+        {
+            Assert.AreEqual(1, changes.Count);
+        }
         [TestMethod]
         public void TestSimpleCommandRegistration()
         {

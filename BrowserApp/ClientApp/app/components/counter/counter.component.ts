@@ -8,8 +8,9 @@ import { ChangesPropagator } from '../changesPropagator/ChangesPropagator';
 export class CounterComponent {
     public currentCount = 0;
 
+    // @ts-ignore: server has no initializer
     @Input() server: ChangesPropagator;
-
+    
     public incrementCounter() {
         this.currentCount++;
         this.server.executeCommand(0);

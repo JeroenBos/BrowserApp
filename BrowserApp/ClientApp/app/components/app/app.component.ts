@@ -1,6 +1,7 @@
 import { Component, Inject, ComponentFactoryResolver, ComponentFactory, OnInit, PACKAGE_ROOT_URL, AfterViewInit } from '@angular/core';
 import { Http } from '@angular/http';
-import { ChangesPropagator } from '../changesPropagator/ChangesPropagator';
+import { ChangesPropagator, IComponent } from '../changesPropagator/ChangesPropagator';
+import { CommandManager } from '../../commands/commands';
 
 @Component({
     selector: 'app',
@@ -13,9 +14,13 @@ export class AppComponent {
         componentFactoryResolver: ComponentFactoryResolver,
         @Inject('BASE_URL') baseUrl: string) {
 
-        this.changesPropagator = new ChangesPropagator(http, componentFactoryResolver, baseUrl);
+        this.changesPropagator = new ChangesPropagator(http, componentFactoryResolver, baseUrl, AppComponent.initialComponents);
 
         this.changesPropagator.open();
+    }
+
+    private static * initialComponents(): Iterable<IComponent> {
+        yield new CommandManager(0);
     }
 }
 
