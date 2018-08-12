@@ -14,7 +14,7 @@ namespace BrowserApp.Controllers
         private readonly UserSessionManager userSessionManager;
         public ChangesController(UserSessionManager userSessionManager)
         {
-            if(userSessionManager == null) { throw new ArgumentNullException(nameof(userSessionManager)); }
+            if (userSessionManager == null) { throw new ArgumentNullException(nameof(userSessionManager)); }
 
             this.userSessionManager = userSessionManager;
         }
@@ -27,7 +27,7 @@ namespace BrowserApp.Controllers
             return userSession.Flush();
         }
         [HttpPost("[action]")]
-        public async Task<object> ExecuteCommand(CommandInstruction instruction)
+        public async Task<object> ExecuteCommand([FromBody] CommandInstruction instruction)
         {
             var userSession = await this.userSessionManager.GetOrCreateSessionAsync(this.User);
             await userSession.ExecuteCommand(instruction, this.User);
