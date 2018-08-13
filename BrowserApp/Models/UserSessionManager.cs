@@ -22,15 +22,15 @@ namespace BrowserApp
         private readonly Dictionary<string, UserSession> cachedSessions = new Dictionary<string, UserSession>();
         private readonly ILogger logger;
 
-        public static UserSessionManager Create<TData>(IUserSessionsStorage<TData> userSessionStorage, 
-                                                       ViewModelFactoryDelegate<TData> createInitialViewModelRoot, 
+        public static UserSessionManager Create<TData>(IUserSessionsStorage<TData> userSessionStorage,
+                                                       ViewModelFactoryDelegate<TData> createInitialViewModelRoot,
                                                        ILogger logger)
         {
             return new UserSessionManager(userSessionStorage, data => createInitialViewModelRoot((TData)data), logger);
         }
-        private UserSessionManager(IUserSessionsStorage userSessionsStorage, 
+        private UserSessionManager(IUserSessionsStorage userSessionsStorage,
                                    ViewModelFactoryDelegate<object> createInitialViewModelRoot,
-                                   ILogger logger, 
+                                   ILogger logger,
                                    Type createInitiViewModelTypeArg)
             : this(userSessionsStorage, createInitialViewModelRoot, logger)
         {
