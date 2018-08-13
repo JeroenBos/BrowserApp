@@ -77,7 +77,7 @@ namespace BrowserApp.POCOs
 
             // TODO: validate that value can be serialized
 
-            return new PropertyChange() { Id = containerId, PropertyName = propertyName, Value = value };
+            return new PropertyChange() { Id = containerId, PropertyName = propertyName.ToFirstLower(), Value = value };
         }
     }
     abstract class CollectionChange : Change
@@ -154,5 +154,18 @@ namespace BrowserApp.POCOs
             }
         }
 
+        public static string ToFirstLower(this string s)
+        {
+            Contract.Requires(!string.IsNullOrEmpty(s));
+
+            char lower = char.ToLowerInvariant(s[0]);
+            if (s.StartsWith(lower))
+                return s;
+            string result = lower.ToString() + s.Substring(1);
+            Contract.Ensures(result.Length == s.Length);
+            Contract.Ensures(result[0] == char.ToLowerInvariant(s[0]));
+            Contract.Ensures(result.Skip(1).SequenceEqual(s.Skip(1)));
+            return result;
+        }
     }
 }
