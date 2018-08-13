@@ -7,10 +7,7 @@ import { isComponentView } from '@angular/core/src/view/util';
 import { BaseViewModel } from '../base.component';
 import { CommandInstruction } from '../../commands/commands';
 
-export interface IComponent extends BaseViewModel {
-    [propertyName: string]: any;
-}
-export function isComponent(obj: any): obj is IComponent {
+export function isComponent(obj: any): obj is BaseViewModel {
     return obj != null && obj.__id !== undefined;
 }
 export function assert(expr: boolean, message = "Assertion failed") {
@@ -20,28 +17,18 @@ export function assert(expr: boolean, message = "Assertion failed") {
 }
 export class ChangesPropagator {
     /** A map from component id to component. */
-    private readonly components = new Map<number, IComponent>();
+    private readonly components = new Map<number, BaseViewModel>();
     public readonly collectionEditor: AsynchronousCollectionEditorSolver = new AsynchronousCollectionEditorSolver((component, id) => component.__id = id);
 
     constructor(
         private readonly http: Http,
-        private readonly componentFactoryResolver: ComponentFactoryResolver,
-        private readonly baseUrl: string,
-        private readonly createInitialComponents: () => Iterable<IComponent>) {
+        private readonly baseUrl: string) {
     }
 
     private initializeComponents(): void {
         this.components.clear();
-        for (let initialComponent of this.createInitialComponents()) {
-            assert(initialComponent !== undefined, `Initial components returned an undefined component`);
-            assert(initialComponent !== null, `Initial components returned a null component`);
-            assert(initialComponent.__id !== null, `Initial components returned a component with non-numeric id`);
-            assert(initialComponent.__id >= 0, `Initial components returned a component with invalid id ${initialComponent.__id}`);
-            assert(!this.components.has(initialComponent.__id), `Initial components returned multiple components with the id ${initialComponent.__id}`);
-
-            this.components.set(initialComponent.__id, initialComponent);
-        }
-        console.log(`initialized  ${this.components.size} components`);
+        this.components.set(0, { '__id': 0 });
+        console.log(`initialized view model root`);
     }
 
     public async open(): Promise<void> {
@@ -70,6 +57,9 @@ export class ChangesPropagator {
             if (response.rerequest) {
                 this.registerRequest();
             }
+
+            console.log('view model tree: ');
+            console.log((<any>this.components.get(0)));
         }
         catch (error) {
             console.error(error);
@@ -120,9 +110,9 @@ export class ChangesPropagator {
             if (ChangesPropagator.IsPropertyChanged(change)) {
                 this.processPropertyChange(component, change);
             } else if (ChangesPropagator.IsCollectionItemAdded(change)) {
-                this.collectionEditor.onAddedServerSideToCollection(change.collectionName === undefined ? component : component[change.collectionName], this.toInstance(change.addedItemId), change.index, change.instructionId);
+                this.collectionEditor.onAddedServerSideToCollection(change.collectionName === undefined ? component : (<any>component)[change.collectionName], this.toInstance(change.addedItemId), change.index, change.instructionId);
             } else if (ChangesPropagator.IsCollectionItemRemoved(change)) {
-                this.collectionEditor.onRemovedServerSideFromCollection(change.collectionName === undefined ? component : component[change.collectionName], this.toInstance(change.removedItemId), change.index, change.instructionId);
+                this.collectionEditor.onRemovedServerSideFromCollection(change.collectionName === undefined ? component : (<any>component)[change.collectionName], this.toInstance(change.removedItemId), change.index, change.instructionId);
             } else if (ChangesPropagator.IsCollectionItemReordered(change)) {
                 throw new Error('reordering not implemented yet');
             } else {

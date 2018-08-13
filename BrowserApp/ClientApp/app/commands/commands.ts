@@ -2,7 +2,7 @@
 import { Http } from '@angular/http';
 import { forEach } from '@angular/router/src/utils/collection';
 import 'rxjs/add/operator/toPromise';
-import { ChangesPropagator, IComponent } from '../components/changesPropagator/ChangesPropagator';
+import { ChangesPropagator } from '../components/changesPropagator/ChangesPropagator';
 import { BaseViewModel, BaseComponent } from '../components/base.component';
 
 export class Command {
@@ -29,10 +29,8 @@ export class CommandInstruction {
     }
 }
 
-export class CommandManager implements IComponent {
-    [propertyName: string]: any;
-    __id: number;
-
+export class CommandManager implements BaseViewModel {
+    public readonly __id: number;
     public constructor(id: number) {
         this.__id = id;
     }

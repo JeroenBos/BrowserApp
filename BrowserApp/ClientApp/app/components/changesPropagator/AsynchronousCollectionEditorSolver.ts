@@ -2,7 +2,8 @@
 import { Http } from '@angular/http';
 import { forEach } from '@angular/router/src/utils/collection';
 import 'rxjs/add/operator/toPromise';
-import { IComponent, isComponent } from './ChangesPropagator';
+import { isComponent } from './ChangesPropagator';
+import { BaseViewModel } from '../base.component';
 
 type Command = any;
 
@@ -150,6 +151,6 @@ export class AsynchronousCollectionEditorSolver {
         }
     }
 
-    constructor(private readonly associateWithId: (component: IComponent, id: number) => void) {
+    constructor(private readonly associateWithId: (component: BaseViewModel, id: number) => void) {
     }
 }
