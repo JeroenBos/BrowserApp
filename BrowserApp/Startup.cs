@@ -38,7 +38,7 @@ namespace BrowserApp
             }
 
             var logger = new Logger();
-            var userSessionManager = UserSessionManager.Create(new TempUserSessionsStorage(), stream => new TempViewModel(), logger);
+            var userSessionManager = UserSessionManager.Create(new TempUserSessionsStorage(), SpecificCode.getRoot_TODO_ToBeProvidedByExtension, logger);
             services.AddTransient(serviceProvider => userSessionManager);
         }
         class TempUserSessionsStorage : IUserSessionsStorage<Stream>
@@ -53,23 +53,6 @@ namespace BrowserApp
 
             void IUserSessionsStorage.CreateOrUpdate(string user, object data) => CreateOrUpdate(user, (Stream)data);
             Task<object> IUserSessionsStorage.TryOpen(string user) => TryOpen(user).Cast<object, Stream>();
-        }
-        class TempViewModel : INotifyPropertyChanged
-        {
-            private int count;
-            public event PropertyChangedEventHandler PropertyChanged;
-            public int Count
-            {
-                get => count;
-                set
-                {
-                    if (count != value)
-                    {
-                        this.count = value;
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
-                    }
-                }
-            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

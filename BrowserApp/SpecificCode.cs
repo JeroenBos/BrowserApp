@@ -2,6 +2,7 @@ using JBSnorro;
 using JBSnorro.Diagnostics;
 using System;
 using System.ComponentModel;
+using System.IO;
 
 namespace BrowserApp
 {
@@ -10,6 +11,14 @@ namespace BrowserApp
         public static void Initialize(CommandManager manager)
         {
             manager.Add(IncrementCounterCommand.Singleton);
+        }
+
+        public static AppViewModel<CounterViewModel> getRoot_TODO_ToBeProvidedByExtension(Stream data)
+        {
+            return new AppViewModel<CounterViewModel>()
+            {
+                Counter = new CounterViewModel()
+            };
         }
 
     }
@@ -29,6 +38,16 @@ namespace BrowserApp
 
         void ICommand.Execute(object viewModel, object eventArgs) => Execute((CounterViewModel)viewModel, eventArgs);
         bool ICommand.CanExecute(object viewModel, object eventArgs) => CanExecute((CounterViewModel)viewModel, eventArgs);
+    }
+
+    public class AppViewModel<TRoot> : DefaultINotifyPropertyChanged
+    {
+        private TRoot _counter;
+        public TRoot Counter
+        {
+            get { return _counter; }
+            set { this.Set(ref _counter, value); }
+        }
     }
     public class CounterViewModel : DefaultINotifyPropertyChanged
     {
