@@ -79,6 +79,12 @@ namespace BrowserApp.POCOs
 
             return new PropertyChange() { Id = containerId, PropertyName = propertyName.ToFirstLower(), Value = value };
         }
+
+        public override string ToString()
+        {
+            string propertyValue = Value is Reference r ? $"(id={r.__id})" : (Value?.ToString() ?? "null");
+            return $"(id={Id}).{PropertyName}->{propertyValue}";
+        }
     }
     abstract class CollectionChange : Change
     {
