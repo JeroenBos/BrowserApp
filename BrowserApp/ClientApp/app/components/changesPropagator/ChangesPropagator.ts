@@ -114,6 +114,9 @@ export class ChangesPropagator {
                 throw new Error(`invalid json received: component with id '${change.id}' does not exist`);
             }
 
+            //if (ChangesPropagator.IsViewModelInstantiation(change)) {
+            //    this.createNewInstance(change);
+            //} else
             if (ChangesPropagator.IsPropertyChanged(change)) {
                 this.processPropertyChange(component, change);
             } else if (ChangesPropagator.IsCollectionItemAdded(change)) {
@@ -129,6 +132,9 @@ export class ChangesPropagator {
         }
     }
 
+    private static IsViewModelInstantiation(change: IChange): change is IViewModelInstantation {
+        return this.IsPropertyChanged(change) && change.propertyName == '__id';
+    }
     private static IsPropertyChanged(change: any): change is IPropertyChange {
         return 'propertyName' in change;
     }
@@ -148,6 +154,9 @@ export class ChangesPropagator {
     private processPropertyChange(component: BaseViewModel, change: IPropertyChange) {
         (<any>component)[change.propertyName] = this.toInstanceOrCreate(change.value);
     }
+    //private createNewInstance(change: IViewModelInstantation) {
+    //    this.components.set(change.value, { '__id': change.value });
+    //}
 }
 
 type admissibleTypes = string | number | object;
@@ -160,6 +169,10 @@ interface IChange {
     /** The id of the view model containing the change. */
     id: number;
     instructionId: number;
+}
+interface IViewModelInstantation extends IPropertyChange {
+    propertyName: '__id',
+    value: number;
 }
 interface IPropertyChange extends IChange {
     propertyName: string;
