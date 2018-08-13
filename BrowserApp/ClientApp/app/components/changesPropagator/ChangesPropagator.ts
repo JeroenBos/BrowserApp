@@ -78,17 +78,30 @@ export class ChangesPropagator {
 
     /**
      * If the item is a component reference, returns the associated component, otherwise returns the item itself.
-     * @param item
+     * @param value
      */
-    private toInstance(item: any): any {
-        if (isComponent(item)) {
-            const result = this.components.get(item.__id);
+    private toInstance<T>(value: T): typeof value | BaseViewModel {
+        if (isComponent(value)) {
+            const result = this.components.get(value.__id);
             if (result === undefined) {
-                throw new Error(`No viewmodel found for id '${item.__id}'`);
+                throw new Error(`No viewmodel found for id '${value.__id}'`);
             }
             return result;
         }
-        return item;
+        return value;
+    }
+    private toInstanceOrCreate<T>(value: T): typeof value | BaseViewModel {
+        if (isComponent(value)) {
+            const result = this.components.get(value.__id);
+            if (result !== undefined) {
+                return result;
+            }
+
+            this.components.set(value.__id, value);
+            return this.toInstance(value);
+        }
+        return value;
+
     }
 
     private processResponse(response: IResponse) {
@@ -102,7 +115,7 @@ export class ChangesPropagator {
             }
 
             if (ChangesPropagator.IsPropertyChanged(change)) {
-                this.processPropertyChange(component, change as IPropertyChange);
+                this.processPropertyChange(component, change);
             } else if (ChangesPropagator.IsCollectionItemAdded(change)) {
                 this.collectionEditor.onAddedServerSideToCollection(change.collectionName === undefined ? component : component[change.collectionName], this.toInstance(change.addedItemId), change.index, change.instructionId);
             } else if (ChangesPropagator.IsCollectionItemRemoved(change)) {
@@ -132,8 +145,8 @@ export class ChangesPropagator {
         return 'index1' in change;
     }
 
-    private processPropertyChange(component: IComponent, change: IPropertyChange) {
-        component[change.propertyName] = this.toInstance(change.value);
+    private processPropertyChange(component: BaseViewModel, change: IPropertyChange) {
+        (<any>component)[change.propertyName] = this.toInstanceOrCreate(change.value);
     }
 }
 
