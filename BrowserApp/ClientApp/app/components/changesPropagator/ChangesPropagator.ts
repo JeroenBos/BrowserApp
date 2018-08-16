@@ -20,14 +20,17 @@ export class ChangesPropagator {
     private readonly components = new Map<number, BaseViewModel>();
     public readonly collectionEditor: AsynchronousCollectionEditorSolver = new AsynchronousCollectionEditorSolver((component, id) => component.__id = id);
 
+
     constructor(
         private readonly http: Http,
-        private readonly baseUrl: string) {
+        private readonly baseUrl: string,
+        private readonly createNewAppViewModel: () => BaseViewModel) {
     }
 
     private initializeComponents(): void {
         this.components.clear();
-        this.components.set(0, { '__id': 0 });
+        const newRoot = this.createNewAppViewModel();
+        this.components.set(newRoot.__id, newRoot);
         console.log(`initialized view model root`);
     }
 

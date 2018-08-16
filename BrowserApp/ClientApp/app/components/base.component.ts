@@ -9,8 +9,10 @@ export abstract class BaseComponent<TViewModel extends BaseViewModel> implements
 
     public get __id(): number { return this.viewModel.__id; }
 
-    public constructor(changesPropagator?: ChangesPropagator) {
+    public constructor(changesPropagator?: ChangesPropagator, viewModel?: TViewModel) {
         this.server = <any>changesPropagator;
+        if (viewModel !== undefined)
+            this.viewModel = viewModel;
     }
 
     public ngOnInit() {

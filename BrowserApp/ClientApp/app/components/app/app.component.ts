@@ -15,9 +15,14 @@ export class AppComponent extends BaseComponent<App> {
 
     constructor(http: Http,
         @Inject('BASE_URL') baseUrl: string) {
-        super(new ChangesPropagator(http, baseUrl))
+        super(new ChangesPropagator(http, baseUrl, () => this.createInitialViewModel()))
 
         this.server.open();
+    }
+
+    private createInitialViewModel(): BaseViewModel {
+        (<any>this).viewModel = { __id: 0 };
+        return this.viewModel;
     }
 }
 export interface App extends BaseViewModel {
