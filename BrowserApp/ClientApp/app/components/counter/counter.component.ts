@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { ChangesPropagator } from '../changesPropagator/ChangesPropagator';
 import { BaseComponent, BaseViewModel } from '../base.component';
-import { CommandInstruction } from '../../commands/commands';
+import { CommandInstruction } from '../../commands/commandInstruction';
 
 @Component({
     selector: 'counter',

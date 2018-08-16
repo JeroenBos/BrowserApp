@@ -5,7 +5,7 @@ import 'rxjs/add/operator/toPromise';
 import { AsynchronousCollectionEditorSolver } from './AsynchronousCollectionEditorSolver';
 import { isComponentView } from '@angular/core/src/view/util';
 import { BaseViewModel } from '../base.component';
-import { CommandInstruction } from '../../commands/commands';
+import { CommandInstruction } from '../../commands/commandInstruction';
 
 export function isComponent(obj: any): obj is BaseViewModel {
     return obj != null && obj.__id !== undefined;

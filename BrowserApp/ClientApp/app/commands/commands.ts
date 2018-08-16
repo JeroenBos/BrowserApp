@@ -11,31 +11,10 @@ export class Command {
         public readonly viewModelTypeIds: number[]) {
     }
 }
-export class CommandInstruction {
-    public readonly commandId: number;
-    public readonly viewModelId: number;
-    public readonly eventArgs: Exclude<any, null | undefined>;
-
-    public constructor(
-        commandId: number,
-        viewModel: BaseViewModel | BaseComponent<any> | number,
-        eventArgs?: any) {
-
-        this.commandId = commandId;
-        this.viewModelId = isNumeric(viewModel)
-            ? <number>viewModel
-            : (<BaseViewModel | BaseComponent<any>>viewModel).__id;
-        this.eventArgs = eventArgs || 'null';
-    }
-}
 
 export class CommandManager implements BaseViewModel {
     public readonly __id: number;
     public constructor(id: number) {
         this.__id = id;
     }
-}
-
-function isNumeric(n: any) {
-    return !isNaN(parseFloat(n)) && isFinite(n);
 }
