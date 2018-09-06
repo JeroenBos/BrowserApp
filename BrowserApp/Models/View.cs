@@ -85,10 +85,10 @@ namespace BrowserApp
         {
             Contract.Requires(sender != null);
             Contract.Requires(e != null);
-            var propertyInfo = sender.GetType().GetProperty(e.PropertyName);
-            Contract.Requires(propertyInfo != null, $"No public property '{e.PropertyName}' could not be found on an instance of type '{sender.GetType().FullName}'");
+            if (e.PropertyName.EndsWith("[]")) { return; } // we're not interested in indexers
+            var propertyInfo = PropertyInfo.From(sender, e.PropertyName);
 
-            if (IncludeDeep(sender, e.PropertyName))
+            if (IncludeDeep(sender, propertyInfo))
             {
                 if (!(e is IPropertyMutatedEventArgs m))
                     throw new ContractException("For view model properties that have nested viewmodels, the old value needs to be accessible (for unregistering). ");
@@ -110,7 +110,7 @@ namespace BrowserApp
             if (IncludeProperty(sender, propertyInfo))
             {
                 var value = propertyInfo.GetValue(sender);
-                this.AddChange(PropertyChange.Create(idProvider[sender], e.PropertyName, value));
+                this.AddChange(PropertyChange.Create(idProvider[sender], e.PropertyName, value, idProvider));
             }
         }
         private void collectionChanged(object sender_, NotifyCollectionChangedEventArgs e)
@@ -148,12 +148,14 @@ namespace BrowserApp
             this.AddChange(change);
         }
 
-
+        /// <summary>
+        /// When calling this method, Flush should have been called first.
+        /// </summary>
         public void AddCompleteStateAsChanges(object viewModel)
         {
             var stateVisitor = new CollectStateVisitor(this.idProvider);
             VisitViewModels(viewModel, stateVisitor.Accept, stateVisitor.Accept);
-            foreach (var change in stateVisitor.Changes)
+            foreach (var change in stateVisitor.Changes.OrderBy(c => c.Id))
             {
                 this.AddChange(change);
             }

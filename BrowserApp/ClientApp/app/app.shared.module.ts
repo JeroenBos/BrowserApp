@@ -3,14 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpModule, Http } from '@angular/http';
 import { RouterModule } from '@angular/router';
-
 import { AppComponent } from './components/app/app.component';
 import { CounterComponent } from './components/counter/counter.component';
+import { CommandManager } from './commands/commandManager';
 
 @NgModule({
     declarations: [
         AppComponent,
         CounterComponent,
+        CommandManager
     ],
     imports: [
         CommonModule,

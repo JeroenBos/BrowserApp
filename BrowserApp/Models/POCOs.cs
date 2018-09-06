@@ -3,6 +3,8 @@ using JBSnorro.Diagnostics;
 using JBSnorro.Logging;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using static BrowserApp.Reflection;
@@ -30,6 +32,7 @@ namespace BrowserApp.POCOs
     }
     class Reference
     {
+        public bool IsCollection { get; set; }
         public int __id { get; set; }
         /// <summary>
         /// Returns the specified object as reference if it is a view model, otherwise returns the object itself.
@@ -44,16 +47,29 @@ namespace BrowserApp.POCOs
             }
             if (IncludeDeep(obj.GetType()))
             {
-                int id = idProvider[obj];
-                return Create(id);
+                return Create(obj, obj is INotifyCollectionChanged, idProvider);
             }
             return obj;
         }
-        public static Reference Create(int id)
+
+        public static Reference Create(INotifyPropertyChanged viewModel, IIdProvider idProvider)
+            => Create(viewModel, isCollection: false, idProvider);
+        public static Reference Create(INotifyCollectionChanged viewModel, IIdProvider idProvider)
+            => Create(viewModel, isCollection: true, idProvider);
+        private static Reference Create(object viewModel, bool isCollection, IIdProvider idProvider)
+        {
+            Contract.Requires(viewModel != null);
+            Contract.Requires(idProvider != null);
+
+            int id = idProvider[viewModel];
+            return Create(id, isCollection);
+        }
+
+        public static Reference Create(int id, bool isCollection = false)
         {
             Contract.Requires(id >= 0);
 
-            return new Reference { __id = id };
+            return new Reference { __id = id, IsCollection = isCollection };
         }
     }
     class PropertyChange : Change
@@ -73,7 +89,8 @@ namespace BrowserApp.POCOs
         {
             Contract.Requires(containerId >= 0);
             Contract.Requires(!string.IsNullOrEmpty(propertyName));
-            Contract.Requires(value == null || !IncludeDeep(value.GetType()), $"Objects of type '{value?.GetType()}' cannot be serialized. Use a reference instead. ");
+            Contract.Requires(value == null || !IncludeDeep(value.GetType()),
+                $"Objects of type '{value?.GetType()}' cannot be serialized. Use a reference instead, or provide an idProvider. ");
 
             // TODO: validate that value can be serialized
 
@@ -127,7 +144,7 @@ namespace BrowserApp.POCOs
     [Serializable]
     public sealed class CommandInstruction
     {
-        public int CommandId { get; set; }
+        public string CommandName { get; set; }
         public int ViewModelId { get; set; }
         public object EventArgs { get; set; }
     }
@@ -140,9 +157,9 @@ namespace BrowserApp.POCOs
             {
                 error = "command instruction was null";
             }
-            else if (commandInstruction.CommandId < 0)
+            else if (string.IsNullOrWhiteSpace(commandInstruction.CommandName))
             {
-                error = "A negative command id was specified";
+                error = "An empty command name was specified";
             }
             else if (commandInstruction.EventArgs == null)
             {

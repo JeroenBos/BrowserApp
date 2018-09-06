@@ -1,24 +1,25 @@
-﻿using System;
-using System.IO;
-using System.Linq;
+﻿using BrowserApp.Commands;
+using BrowserApp.POCOs;
 using JBSnorro;
 using JBSnorro.Collections.Immutable;
 using JBSnorro.Diagnostics;
-using static BrowserApp.Reflection;
-using BrowserApp.POCOs;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Windows.Input;
 using JBSnorro.Logging;
+using System;
+using System.IO;
+using System.Linq;
 using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using static BrowserApp.Reflection;
 
 namespace BrowserApp
 {
     public sealed class UserSession
     {
         private static readonly bool alwaysRerequest = false;
-        public object ViewModelRoot { get; }
-        public CommandManager CommandManager { get; }
+        public IAppViewModel ViewModelRoot { get; }
+        public CommandManager CommandManager => ViewModelRoot.CommandManager;
         internal View View { get; }
         private readonly object _lock = new object();
         private readonly ThreadSafeList<Change> changes = new ThreadSafeList<Change>();
@@ -27,9 +28,9 @@ namespace BrowserApp
         private readonly ILogger logger;
         internal readonly IIdProvider viewModelIdProvider;
 
-        public Task ExecuteCommand(int commandId, int viewModelId, object eventArgs, ClaimsPrincipal user)
+        public Task ExecuteCommand(string commandName, int viewModelId, object eventArgs, ClaimsPrincipal user)
         {
-            return ExecuteCommand(new CommandInstruction() { CommandId = commandId, ViewModelId = viewModelId, EventArgs = eventArgs }, user);
+            return ExecuteCommand(new CommandInstruction() { CommandName = commandName, ViewModelId = viewModelId, EventArgs = eventArgs }, user);
         }
         public Task ExecuteCommand(CommandInstruction instruction, ClaimsPrincipal user)
         {
@@ -94,22 +95,21 @@ namespace BrowserApp
             this.changes.Add(change);
         }
 
-        internal UserSession(object viewModelRoot, ILogger logger, AtMostOneAwaiter waiter = null)
+        internal UserSession(IAppViewModel viewModelRoot, ILogger logger, AtMostOneAwaiter waiter = null)
         {
             const int _10ms = 10;
             const int _5minutes = 5 * 60 * 1000;
             Contract.Requires(viewModelRoot != null);
             Contract.Requires(logger != null);
             Contract.Requires(viewModelRoot != null && IncludeDeep(viewModelRoot.GetType()), "The view model is not of any view model type");
+            Contract.Requires(viewModelRoot.CommandManager != null);
 
             this.logger = logger;
             this.ViewModelRoot = viewModelRoot;
             this.viewModelIdProvider = new IdProvider();
-            this.CommandManager = new CommandManager();
             this.View = new View(viewModelRoot, this.RegisterChange, viewModelIdProvider);
             this.commands = new ProcessingQueue<UserCommandInstruction>(() => Task.Run(this.worker));
             this.waiter = waiter ?? new AtMostOneAwaiter(defaultDuration: _10ms, maxDuration: _5minutes);
-            SpecificCode.Initialize(this.CommandManager);
         }
 
         private void worker()
@@ -124,22 +124,22 @@ namespace BrowserApp
                     {
                         throw new InvalidOperationException($"UserSession: Command failed: View model with id {instruction.ViewModelId} was not found");
                     }
-                    else if (!CommandManager.Exists(instruction.CommandId))
+                    else if (!CommandManager.Exists(instruction.CommandName))
                     {
-                        throw new InvalidOperationException($"UserSession: Command failed: Command with id {instruction.CommandId} was not found");
+                        throw new InvalidOperationException($"UserSession: Command failed: Command with id {instruction.CommandName} was not found");
                     }
-                    else if (!CommandManager.IsAuthorized(instruction.User, instruction.CommandId))
+                    else if (!CommandManager.IsAuthorized(instruction.User, instruction.CommandName))
                     {
-                        throw new UnauthorizedAccessException($"UserSession: Command failed: The user is unauthorized to execute command {instruction.CommandId})");
+                        throw new UnauthorizedAccessException($"UserSession: Command failed: The user is unauthorized to execute command {instruction.CommandName})");
                     }
-                    else if (!CommandManager.CanExecute(instruction.User, instruction.CommandId, instruction.ViewModel, instruction.EventArgs))
+                    else if (!CommandManager.CanExecute(instruction.User, instruction.CommandName, instruction.ViewModel, instruction.EventArgs))
                     {
                         logger.LogWarning("UserSession: Command not executed");
                         instruction.tcs.TrySetCanceled();
                     }
                     else
                     {
-                        CommandManager.Execute(instruction.User, instruction.CommandId, instruction.ViewModel, instruction.EventArgs);
+                        CommandManager.Execute(instruction.User, instruction.CommandName, instruction.ViewModel, instruction.EventArgs);
                         instruction.tcs.TrySetResult(null);
                         success = true;
                     }
@@ -181,22 +181,22 @@ namespace BrowserApp
         private sealed class UserCommandInstruction
         {
             internal readonly TaskCompletionSource<object> tcs;
-            public int CommandId { get; }
+            public string CommandName { get; }
             public int ViewModelId { get; }
             public object EventArgs { get; }
             public ClaimsPrincipal User { get; }
             /// <summary>
-            /// Gets the view model associated with <see cref="CommandId"/> and <see cref="User"/>; or null in case no such view model was found.
+            /// Gets the view model associated with <see cref="CommandName"/> and <see cref="User"/>; or null in case no such view model was found.
             /// </summary>
             public object ViewModel { get; }
             public Task Task => tcs.Task;
 
-            public UserCommandInstruction(int commandId, int viewModelId, object eventArgs, ClaimsPrincipal user, IIdProvider viewModelResolver)
+            public UserCommandInstruction(string commandName, int viewModelId, object eventArgs, ClaimsPrincipal user, IIdProvider viewModelResolver)
             {
                 Contract.Requires(viewModelResolver != null);
 
                 this.User = user;
-                this.CommandId = commandId;
+                this.CommandName = commandName;
                 this.ViewModelId = viewModelId;
                 this.EventArgs = eventArgs;
                 this.tcs = new TaskCompletionSource<object>();
@@ -205,7 +205,7 @@ namespace BrowserApp
                 this.ViewModel = viewModel; // possibly reassigns null 
             }
             public UserCommandInstruction(CommandInstruction instruction, ClaimsPrincipal user, IIdProvider viewModelResolver)
-                : this(instruction.CommandId, instruction.ViewModelId, instruction.EventArgs, user, viewModelResolver)
+                : this(instruction.CommandName, instruction.ViewModelId, instruction.EventArgs, user, viewModelResolver)
             {
                 Contract.Requires(instruction != null);
 

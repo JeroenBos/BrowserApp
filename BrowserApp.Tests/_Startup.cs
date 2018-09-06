@@ -10,13 +10,14 @@ namespace BrowserApp.Tests
     {
         static void Main(string[] args)
         {
-            new CommandManagerTests().TestSimpleCommandRegistration();
+            //new ViewBindingAsTests().SubstitutionWhenKeyIsValueType();
+            // new CommandManagerTests().CommandManagerConstruction();
 
             Task.Run(() => main(args)).GetAwaiter().GetResult();
         }
         static async Task main(string[] args)
         {
-            // await new UserSessionTests().PropertyChangeIsFlushed();
+            await new UserSessionTests().PropertyChangeIsFlushed();
         }
     }
 }

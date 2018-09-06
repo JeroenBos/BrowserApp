@@ -44,6 +44,9 @@
     <Reference Include="JBSnorro">
       <HintPath>..\..\..\ASDE\JBSnorro\bin\Debug\JBSnorro.dll</HintPath>
     </Reference>
+    <Reference Include="System">
+      <HintPath>System</HintPath>
+    </Reference>
   </ItemGroup>
 
   <Target Name="DebugRunWebpack" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('wwwroot\dist') ">

@@ -1,7 +1,9 @@
-﻿using JBSnorro.Diagnostics;
+﻿using BrowserApp.Commands;
+using JBSnorro.Diagnostics;
 using JBSnorro.Logging;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
@@ -9,12 +11,22 @@ using System.Threading.Tasks;
 
 namespace BrowserApp
 {
+    public interface IAppViewModel : INotifyPropertyChanged
+    {
+        CommandManager CommandManager { get; }
+    }
     /// <summary>
     /// A delegate that creates a view model root and populates the command manager with commands.
     /// </summary>
-    public delegate object ViewModelFactoryDelegate<in TData>(TData data);
+    public delegate IAppViewModel ViewModelFactoryDelegate<in TData>(TData data);
     public sealed class UserSessionManager
     {
+#if DEBUG
+        private readonly bool alwaysReturnNewUserSession = true;
+#else
+        private readonly bool alwaysReturnNewUserSession = false;
+#endif
+
         private readonly Type storedUserSessionsDataType;
         private readonly IUserSessionsStorage storedUserSessions;
         private readonly ViewModelFactoryDelegate<object> viewModelFactory;
@@ -83,12 +95,14 @@ namespace BrowserApp
         }
         public async Task<UserSession> GetOrCreateSessionAsync(ClaimsPrincipal user)
         {
-            var retrievedSession = await GetCachedOrStoredSessionAsync(user);
-            if (retrievedSession != null)
+            if (!alwaysReturnNewUserSession)
             {
-                return retrievedSession;
+                var retrievedSession = await GetCachedOrStoredSessionAsync(user);
+                if (retrievedSession != null)
+                {
+                    return retrievedSession;
+                }
             }
-
             const Stream defaultSession = null;
             return createNewUserSession(defaultSession, user);
         }

@@ -1,3 +1,4 @@
+using BrowserApp.Commands;
 using JBSnorro;
 using JBSnorro.Diagnostics;
 using System;
@@ -10,14 +11,15 @@ namespace BrowserApp
     {
         public static void Initialize(CommandManager manager)
         {
-            manager.Add(IncrementCounterCommand.Singleton);
+            manager.Add(IncrementCounterCommand.Singleton, "Increment");
         }
 
-        public static AppViewModel<CounterViewModel> getRoot_TODO_ToBeProvidedByExtension(Stream data)
+        public static SpecificAppViewModel getRoot_TODO_ToBeProvidedByExtension(Stream data)
         {
-            return new AppViewModel<CounterViewModel>()
+            return new SpecificAppViewModel()
             {
-                Counter = new CounterViewModel()
+                Counter = new CounterViewModel(),
+                CommandManager = new CommandManager()
             };
         }
 
@@ -25,7 +27,9 @@ namespace BrowserApp
     public class IncrementCounterCommand : ICommand<CounterViewModel, object>
     {
         public static readonly IncrementCounterCommand Singleton = new IncrementCounterCommand();
-        public bool CanExecute(CounterViewModel viewModel, object eventArgs)
+
+        public BooleanAST CanExecute => BooleanAST.True;
+        public bool AdditionalCanExecute(CounterViewModel viewModel, object eventArgs)
         {
             Contract.Requires(viewModel != null);
             return true;
@@ -37,16 +41,21 @@ namespace BrowserApp
         }
 
         void ICommand.Execute(object viewModel, object eventArgs) => Execute((CounterViewModel)viewModel, eventArgs);
-        bool ICommand.CanExecute(object viewModel, object eventArgs) => CanExecute((CounterViewModel)viewModel, eventArgs);
+        bool ICommand.AdditionalCanExecute(object viewModel, object eventArgs) => AdditionalCanExecute((CounterViewModel)viewModel, eventArgs);
     }
-
-    public class AppViewModel<TRoot> : DefaultINotifyPropertyChanged
+    public class SpecificAppViewModel : DefaultINotifyPropertyChanged, IAppViewModel
     {
-        private TRoot _counter;
-        public TRoot Counter
+        private CounterViewModel _counter;
+        public CounterViewModel Counter
         {
             get { return _counter; }
             set { this.Set(ref _counter, value); }
+        }
+        private CommandManager _commandManager;
+        public CommandManager CommandManager
+        {
+            get { return _commandManager; }
+            set { this.Set(ref _commandManager, value); }
         }
     }
     public class CounterViewModel : DefaultINotifyPropertyChanged

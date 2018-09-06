@@ -1,4 +1,6 @@
 ﻿using BrowserApp.POCOs;
+using JBSnorro;
+using JBSnorro.Collections;
 using JBSnorro.Diagnostics;
 using JBSnorro.Extensions;
 using System;
@@ -152,9 +154,19 @@ namespace BrowserApp
         {
             Contract.Requires(container != null);
 
-            return container.GetType()
-                            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                            .Where(property => !property.HasAttribute<NoViewBindingAttribute>());
+            var regularProperties = container.GetType()
+                                             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                                             .Where(property => !property.IsIndexer())
+                                             .Where(property => !property.HasAttribute<NoViewBindingAttribute>())
+                                             .Select(property => (PropertyInfo)property);
+
+            if (container is IExtraViewPropertiesContainer propertiesContainer)
+            {
+                var extraProperties = propertiesContainer.Properties.Select(p => PropertyInfo.Create(propertiesContainer, p.Key));
+                return regularProperties.Concat(extraProperties);
+            }
+
+            return regularProperties;
         }
         public static IEnumerable<object> GetIncludedItems(INotifyCollectionChanged collection)
         {
@@ -197,6 +209,91 @@ namespace BrowserApp
                 }
             }
         }
+
+        public abstract class PropertyInfo
+        {
+            public static implicit operator PropertyInfo(System.Reflection.PropertyInfo propertyInfo) => new RegularPropertyInfo(propertyInfo);
+            internal static PropertyInfo Create(IExtraViewPropertiesContainer extraProperties, string name) => new ExtraPropertyInfo(extraProperties, name);
+            public static PropertyInfo From(object sender, string propertyName)
+            {
+                if (sender is IExtraViewPropertiesContainer container)
+                {
+                    if (container.Properties.ContainsKey(propertyName))
+                    {
+                        return Create(container, propertyName);
+                    }
+                }
+
+                if (ViewBindingAsAttribute.mappedObjects.ContainsKey(sender))
+                {
+
+                }
+                var propertyInfo = sender.GetType().GetProperty(propertyName);
+                Contract.Ensures(propertyInfo != null, $"No public property '{propertyName}' could not be found on an instance of type '{sender.GetType().FullName}'"
+                    + (sender is IExtraViewPropertiesContainer ? $", nor did the {nameof(IExtraViewPropertiesContainer)} implementation specify a property with that name" : ""));
+                return propertyInfo;
+            }
+            public abstract object GetValue(object container);
+            public abstract string Name { get; }
+            public abstract Type PropertyType { get; }
+
+            private PropertyInfo() { }
+
+            private sealed class RegularPropertyInfo : PropertyInfo
+            {
+                private readonly System.Reflection.PropertyInfo info;
+                public override string Name => info.Name;
+                public override Type PropertyType => info.PropertyType;
+                public override object GetValue(object container)
+                {
+                    var value = info.GetValue(container);
+                    var substitutionAttribute = info.GetCustomAttribute<ViewBindingAsAttribute>();
+                    if (substitutionAttribute != null)
+                    {
+                        return substitutionAttribute.GetOrCreateSubstitute(value);
+                    }
+                    return value;
+                }
+
+                public RegularPropertyInfo(System.Reflection.PropertyInfo propertyInfo)
+                {
+                    Contract.Requires(propertyInfo != null);
+
+                    this.info = propertyInfo;
+                }
+            }
+            private sealed class ExtraPropertyInfo : PropertyInfo
+            {
+                private readonly IExtraViewPropertiesContainer extraProperties;
+                public override string Name { get; }
+                public override Type PropertyType
+                {
+                    get
+                    {
+                        var value = extraProperties.Properties[this.Name];
+                        if (value == null)
+                        {
+                            return typeof(object);
+                        }
+                        return value.GetType();
+                    }
+                }
+                public override object GetValue(object container)
+                {
+                    Contract.Requires(container == extraProperties);
+                    return extraProperties.Properties[Name];
+                }
+                public ExtraPropertyInfo(IExtraViewPropertiesContainer extraProperties, string name)
+                {
+                    Contract.Requires(extraProperties != null);
+                    Contract.Requires(!string.IsNullOrEmpty(name));
+
+                    this.Name = name;
+                    this.extraProperties = extraProperties;
+                }
+            }
+        }
+
     }
 
     [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
@@ -204,4 +301,112 @@ namespace BrowserApp
     {
 
     }
+    public interface IExtraViewPropertiesContainer
+    {
+        IReadOnlyDictionary<string, object> Properties { get; }
+    }
+
+    public abstract class ViewBindingAsAttribute : Attribute
+    {
+        /// <summary>
+        /// This is a global dictionary that maps all objects that have ever been substituted by another object to that object.
+        /// </summary>
+        internal static readonly WeakReferenceDictionary<object, object> mappedObjects
+            = new WeakReferenceDictionary<object, object>(JBSnorro.Global.ReferenceEqualityComparer);
+
+        /// <summary>
+        /// Gets an object that is represents the actual view model of the specified object.
+        /// </summary>
+        public object GetOrCreateSubstitute(object obj)
+        {
+            Contract.Requires(obj != null, "Only non-null properties can be substituted");
+            // Contract.Requires(obj.GetType().IsClass, "Only reference types can be substituted");
+
+            if (!mappedObjects.TryGetValue(obj, out object substitute))
+            {
+                substitute = this.createSubstitute(obj);
+                mappedObjects.Add(obj, substitute);
+            }
+            return substitute;
+        }
+        /// <summary>
+        /// Creates an object that is represents the actual view model of the specified object, assuming the specified object does not already have a substitute.
+        /// </summary>
+        protected abstract object createSubstitute(object obj);
+    }
+    /// <summary>
+    /// Maps a collection to a typescript map object, which is basically a Dictionary&lt;string, object&gt;
+    /// </summary>
+    public abstract class ViewBindingAsMapAttribute : ViewBindingAsAttribute
+    {
+        /// <summary>
+        /// Gets the name of the typescript property under which the object is to be assigned.
+        /// From the perspective that we're mapping a collection to a Dictionary&lt;string,object&gt;, this function gets the key.
+        /// </summary>
+        /// <param name="value"> The object for which we're returning the key. </param>
+        /// <param name="index"> The index in the collection for which we're returning the key. </param>
+        protected abstract string GetAttributeName(object value, int index);
+
+        /// <summary>
+        /// Creates an object that is represents the actual view model of the specified object, assuming the specified object does not already have a substitute.
+        /// </summary>
+        protected sealed override object createSubstitute(object collection) => createSubstitute((INotifyCollectionChanged)collection);
+        public INotifyPropertyChanged createSubstitute(INotifyCollectionChanged collection)
+        {
+            var result = new Notifier();
+            collection.CollectionChanged += onCollectionChange;
+            return result;
+            void onCollectionChange(object sender, NotifyCollectionChangedEventArgs e)
+            {
+                switch (e.Action)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                        int newIndex = e.NewStartingIndex;
+                        foreach (object newItem in e.NewItems)
+                        {
+                            string name = this.GetAttributeName(newItem, newIndex);
+                            Contract.Assert(!string.IsNullOrEmpty(name), "The attribute name may not be null or empty");
+                            Contract.Assert(!result.Properties.ContainsKey(name), $"The collection already contains a member with name '${name}'");
+                            result.Properties[name] = newItem;
+                            result.Invoke(result, PropertyMutatedEventArgsExtensions.Create(name, typeof(object), null, newItem));
+                            newIndex++;
+                        }
+                        break;
+                    case NotifyCollectionChangedAction.Move:
+                        break; // don't do anything
+                    case NotifyCollectionChangedAction.Remove:
+                        int oldIndex = e.OldStartingIndex;
+                        foreach (object newItem in e.OldItems)
+                        {
+                            string name = this.GetAttributeName(newItem, oldIndex);
+                            Contract.Assert(!string.IsNullOrEmpty(name), "The attribute name may not be null or empty");
+                            Contract.Assert(result.Properties.ContainsKey(name), $"The collection did not contain a member with name '${name}' to remove");
+                            var oldItem = result.Properties[name];
+                            result.Properties[name] = null;
+                            result.Invoke(result, PropertyMutatedEventArgsExtensions.Create(name, typeof(object), oldItem, null));
+                            oldIndex++;
+                        }
+                        break;
+                    case NotifyCollectionChangedAction.Replace:
+                    case NotifyCollectionChangedAction.Reset:
+                        throw new NotImplementedException();
+                    default:
+                        throw new ArgumentException();
+                }
+            }
+        }
+        private sealed class Notifier : INotifyPropertyChanged, IExtraViewPropertiesContainer
+        {
+            [NoViewBinding]
+            public Dictionary<string, object> Properties { get; } = new Dictionary<string, object>();
+
+            IReadOnlyDictionary<string, object> IExtraViewPropertiesContainer.Properties => Properties;
+
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            internal void Invoke(object sender, PropertyChangedEventArgs e)
+                => this.PropertyChanged?.Invoke(sender, e);
+        }
+    }
+
 }

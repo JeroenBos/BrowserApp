@@ -1,10 +1,10 @@
-﻿using JBSnorro.Diagnostics;
+﻿using BrowserApp.Commands;
+using JBSnorro.Diagnostics;
 using JBSnorro.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using System.Windows.Input;
 using static BrowserApp.Tests.Extensions;
 
 namespace BrowserApp.Tests.Mocks
@@ -27,8 +27,9 @@ namespace BrowserApp.Tests.Mocks
             this.logger = logger;
         }
 
+        public BooleanAST CanExecute { get; } = BooleanAST.True;
         [DebuggerHidden]
-        public virtual bool CanExecute(MockViewModel viewModel, object parameter) => true;
+        public virtual bool AdditionalCanExecute(MockViewModel viewModel, object parameter) => true;
         public void Execute(MockViewModel viewModel, object parameter)
         {
             logger.LogInfo("MockCommand: executing command");
@@ -39,7 +40,7 @@ namespace BrowserApp.Tests.Mocks
         }
 
         [DebuggerHidden]
-        bool ICommand.CanExecute(object viewModel, object eventArgs) => CanExecute((MockViewModel)viewModel, eventArgs);
+        bool ICommand.AdditionalCanExecute(object viewModel, object eventArgs) => AdditionalCanExecute((MockViewModel)viewModel, eventArgs);
         [DebuggerHidden]
         void ICommand.Execute(object viewModel, object eventArgs) => Execute((MockViewModel)viewModel, eventArgs);
     }
@@ -47,6 +48,6 @@ namespace BrowserApp.Tests.Mocks
     {
         public UnexecutableMockCommand(ILogger logger) : base(logger) { }
 
-        public override bool CanExecute(MockViewModel viewModel, object parameter) => false;
+        public override bool AdditionalCanExecute(MockViewModel viewModel, object parameter) => false;
     }
 }

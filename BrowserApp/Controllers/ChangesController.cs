@@ -1,10 +1,10 @@
-﻿using System;
+﻿using BrowserApp;
+using BrowserApp.POCOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BrowserApp;
-using BrowserApp.POCOs;
-using Microsoft.AspNetCore.Mvc;
 
 namespace BrowserApp.Controllers
 {
@@ -23,6 +23,8 @@ namespace BrowserApp.Controllers
         public async Task<object> Open()
         {
             var userSession = await this.userSessionManager.GetOrCreateSessionAsync(this.User);
+            SpecificCode.Initialize(userSession.CommandManager);
+            userSession.Flush();  // to prevent double entries in complete state
             userSession.View.AddCompleteStateAsChanges(userSession.ViewModelRoot);
             return userSession.Flush();
         }

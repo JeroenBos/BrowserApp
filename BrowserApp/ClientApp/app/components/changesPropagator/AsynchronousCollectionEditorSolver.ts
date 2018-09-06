@@ -1,19 +1,15 @@
-﻿import { Inject, ComponentFactoryResolver, ComponentFactory } from '@angular/core';
-import { Http } from '@angular/http';
-import { forEach } from '@angular/router/src/utils/collection';
-import 'rxjs/add/operator/toPromise';
-import { isComponent } from './ChangesPropagator';
+﻿import 'rxjs/add/operator/toPromise';
+import { isComponent, admissibleTypes } from './ChangesPropagator';
 import { BaseViewModel } from '../base.component';
 
 type Command = any;
-
 
 
 type Item = AddedItem | RemovedItem;
 class AddedItem {
     public constructor(
         public readonly collection: any[],
-        public readonly item: any,
+        public readonly item: admissibleTypes,
         public readonly index: number,
         public readonly command: Command) {
     }
@@ -21,7 +17,7 @@ class AddedItem {
 class RemovedItem {
     public constructor(
         public readonly collection: any[],
-        public readonly item: any,
+        public readonly item: admissibleTypes,
         public readonly index: number,
         public readonly command: Command) {
     }
@@ -59,15 +55,17 @@ export class AsynchronousCollectionEditorSolver {
 
         this.addedItems.push(new AddedItem(collection, item, index, this.currentCommand));
     }
-    public onAddedServerSideToCollection(collection: any[], item: any, index: number, command: Command): void {
+    public onAddedServerSideToCollection(collection: any[], item: admissibleTypes, index: number, command: Command): boolean {
         if (this.currentCommand != null) {
             throw new Error('A command is currently executing, whereas this method is only supposed to be called from a change received from the server');
         }
 
-        const cachedAddition: AddedItem | null = this.findAndRemoveItem(this.removedItems, collection, command);
+        const cachedAddition: AddedItem | null = this.findAndRemoveItem(this.addedItems, collection, command);
 
         if (cachedAddition != null) {
-            if (isComponent(item)) {
+            if (isComponent(item)) { // arrays that contain components are components too
+                if (!isComponent(cachedAddition.item)) { throw new Error('assertion failed'); }
+
                 // SPEC: if, in the case of insertion, the collection has such a component for the current command, they're linked.
                 // SPEC: if there are multiple in a collection, then the only restriction is that the clientside generates them in the same order as the server pushes them,
                 // SPEC: and that there are equally many of them. 
@@ -77,14 +75,15 @@ export class AsynchronousCollectionEditorSolver {
                 // SPEC: insertion: we have a value and an index
                 // SPEC: register a filter clientside: if from the server the exact expected item collection addition is received, ignore it. It has already been handled.
             }
-            return;
+            return true;
         }
+
 
         const collectionModified = this.addedItems.findIndex(createdComponent => createdComponent.collection === collection) !== -1;
         if (!collectionModified) {
-            collection.splice(index, 0, item);
             // the collection has not been modified by the client side since so this update must still be valid
-            return;
+            // so let the caller simply handle the server change
+            return false;
         }
 
         throw new Error('Not implemented. Refetch collection from server'); // the collection has been modified such that the change from the server could not be incorporated
@@ -100,7 +99,7 @@ export class AsynchronousCollectionEditorSolver {
 
         this.removedItems.push(new RemovedItem(collection, item, index, this.currentCommand));
     }
-    public onRemovedServerSideFromCollection(collection: any[], item: any, index: number, command: Command): void {
+    public onRemovedServerSideFromCollection(collection: any[], itemIdToRemove: number | undefined, index: number, command: Command): boolean {
 
         if (this.currentCommand != null) {
             throw new Error('A command is currently executing, whereas this method is only supposed to be called from a change received from the server');
@@ -108,26 +107,21 @@ export class AsynchronousCollectionEditorSolver {
 
         const cachedRemoval: RemovedItem | null = this.findAndRemoveItem(this.removedItems, collection, command);
 
-        if (cachedRemoval != null) {
-            if (isComponent(item)) {
-                // SPEC: it is based on id: remove the entity with that id, or if it doesnt't exist anymore, that's fine, the clientside already removed it. Simple. 
-                const indexToRemove = collection.findIndex(collectionItem => collectionItem.__id === item.__id);
-                if (indexToRemove) {
-                    collection.splice(indexToRemove, 1);
-                }
+        if (cachedRemoval != null && itemIdToRemove != undefined) {
+            // SPEC: it is based on id: remove the entity with that id, or if it doesnt't exist anymore, that's fine, the clientside already removed it. Simple. 
+            const indexToRemove = collection.findIndex(collectionItem => collectionItem.__id === itemIdToRemove);
+            if (indexToRemove) {
+                collection.splice(indexToRemove, 1);
             }
-            else {
-                // SPEC: removal: we have a value and an index
-                // SPEC: register a filter clientside: if from the server the exact expected item collection removal is received, ignore it: It has already been handled.
-            }
-            return;
+            return true;
         }
 
         const collectionModified = this.removedItems.findIndex(createdComponent => createdComponent.collection === collection) !== -1;
         if (!collectionModified) {
-            collection.splice(index, 1);
+
             // the collection has not been modified by the client side since so this update must still be valid
-            return;
+            // so let the caller simply handle the server change
+            return false;
         }
 
         throw new Error('Not implemented. Refetch collection from server'); // the collection has been modified such that the change from the server could not be incorporated
@@ -151,6 +145,6 @@ export class AsynchronousCollectionEditorSolver {
         }
     }
 
-    constructor(private readonly associateWithId: (component: BaseViewModel, id: number) => void) {
+    constructor(private readonly associateWithId: (cachedComponent: BaseViewModel & { isCollection: boolean }, id: number) => void) {
     }
 }

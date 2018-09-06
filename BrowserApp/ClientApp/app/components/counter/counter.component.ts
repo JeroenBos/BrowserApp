@@ -1,7 +1,5 @@
-import { Component, Input } from '@angular/core';
-import { ChangesPropagator } from '../changesPropagator/ChangesPropagator';
+import { Component } from '@angular/core';
 import { BaseComponent, BaseViewModel } from '../base.component';
-import { CommandInstruction } from '../../commands/commandInstruction';
 
 @Component({
     selector: 'counter',
@@ -12,8 +10,8 @@ export class CounterComponent extends BaseComponent<Counter> implements Counter 
         return this.viewModel.currentCount;
     }
 
-    public incrementCounter() {
-        this.server.executeCommand(new CommandInstruction(0, this.__id));
+    public incrementCounter(e: MouseEvent) {
+        this.commandManager.executeCommandByName("increment", this, e);
     }
 }
 
