@@ -122,15 +122,19 @@ namespace BrowserApp
                 {
                     if (instruction.ViewModel == null)
                     {
-                        throw new InvalidOperationException($"UserSession: Command failed: View model with id {instruction.ViewModelId} was not found");
+                        throw new InvalidOperationException($"UserSession: Command failed: View model with id '{instruction.ViewModelId}' was not found");
                     }
                     else if (!CommandManager.Exists(instruction.CommandName))
                     {
-                        throw new InvalidOperationException($"UserSession: Command failed: Command with id {instruction.CommandName} was not found");
+                        string message = $"UserSession: Command failed: Command with name '{instruction.CommandName}' was not found";
+                        var found = CommandManager.GetCommandCaseInsensitive(instruction.CommandName);
+                        if (found != null)
+                            message += $", but '{found.Name}' was found (case-sensitive)";
+                        throw new InvalidOperationException(message);
                     }
                     else if (!CommandManager.IsAuthorized(instruction.User, instruction.CommandName))
                     {
-                        throw new UnauthorizedAccessException($"UserSession: Command failed: The user is unauthorized to execute command {instruction.CommandName})");
+                        throw new UnauthorizedAccessException($"UserSession: Command failed: The user is unauthorized to execute command '{instruction.CommandName}')");
                     }
                     else if (!CommandManager.CanExecute(instruction.User, instruction.CommandName, instruction.ViewModel, instruction.EventArgs))
                     {

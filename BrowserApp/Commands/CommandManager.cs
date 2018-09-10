@@ -84,7 +84,7 @@ namespace BrowserApp.Commands
         public bool IsAuthorized(ClaimsPrincipal user, string commandName)
         {
             Contract.Requires(!string.IsNullOrEmpty(commandName));
-            Contract.Requires(Exists(commandName));
+            Contract.Requires(this.Exists(commandName));
 
             return GetCommand(commandName).IsAuthorized(user);
         }
@@ -92,11 +92,21 @@ namespace BrowserApp.Commands
         {
             return this.Commands.FirstOrDefault(c => c.Name == commandName);
         }
+        internal CommandViewModel GetCommandCaseInsensitive(string commandName)
+        {
+            return this.Commands.FirstOrDefault(c => StringComparer.OrdinalIgnoreCase.Equals(c.Name, commandName));
+        }
         public bool Exists(string commandName)
         {
             Contract.Requires(!string.IsNullOrEmpty(commandName));
 
             return this.GetCommand(commandName) != null;
+        }
+        public bool ExistsCaseInsensitive(string commandName)
+        {
+            Contract.Requires(!string.IsNullOrEmpty(commandName));
+
+            return GetCommandCaseInsensitive(commandName) != null;
         }
         internal static bool AreCompatible(Type actualViewModelType, Type expectedViewModelType)
         {
