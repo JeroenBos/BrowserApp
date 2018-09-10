@@ -94,7 +94,7 @@ namespace BrowserApp.POCOs
 
             // TODO: validate that value can be serialized
 
-            return new PropertyChange() { Id = containerId, PropertyName = propertyName.ToFirstLower(), Value = value };
+            return new PropertyChange() { Id = containerId, PropertyName = propertyName, Value = value };
         }
 
         public override string ToString()

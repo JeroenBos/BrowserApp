@@ -11,7 +11,7 @@ export class CounterComponent extends BaseComponent<Counter> implements Counter 
     }
 
     public incrementCounter(e: MouseEvent) {
-        this.commandManager.executeCommandByName("increment", this, e);
+        this.commandManager.executeCommandByName("Increment", this, e);
     }
 }
 

@@ -224,10 +224,6 @@ namespace BrowserApp
                     }
                 }
 
-                if (ViewBindingAsAttribute.mappedObjects.ContainsKey(sender))
-                {
-
-                }
                 var propertyInfo = sender.GetType().GetProperty(propertyName);
                 Contract.Ensures(propertyInfo != null, $"No public property '{propertyName}' could not be found on an instance of type '{sender.GetType().FullName}'"
                     + (sender is IExtraViewPropertiesContainer ? $", nor did the {nameof(IExtraViewPropertiesContainer)} implementation specify a property with that name" : ""));
@@ -242,7 +238,7 @@ namespace BrowserApp
             private sealed class RegularPropertyInfo : PropertyInfo
             {
                 private readonly System.Reflection.PropertyInfo info;
-                public override string Name => info.Name;
+                public override string Name => info.Name.ToFirstLower();
                 public override Type PropertyType => info.PropertyType;
                 public override object GetValue(object container)
                 {
