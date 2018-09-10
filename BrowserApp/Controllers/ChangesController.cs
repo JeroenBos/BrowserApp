@@ -32,6 +32,7 @@ namespace BrowserApp.Controllers
         public async Task<object> ExecuteCommand([FromBody] CommandInstruction instruction)
         {
             var userSession = await this.userSessionManager.GetOrCreateSessionAsync(this.User);
+            SpecificCode.Initialize(userSession.CommandManager); // because alwaysReturnNewUserSessions
             await userSession.ExecuteCommand(instruction, this.User);
             return await userSession.FlushOrWait();
         }
@@ -39,6 +40,7 @@ namespace BrowserApp.Controllers
         public async Task<object> RegisterRequest()
         {
             var userSession = await this.userSessionManager.GetOrCreateSessionAsync(User);
+            SpecificCode.Initialize(userSession.CommandManager); // because alwaysReturnNewUserSessions
             return await userSession.FlushOrWait();
         }
     }
