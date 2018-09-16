@@ -404,5 +404,26 @@ namespace BrowserApp
                 => this.PropertyChanged?.Invoke(sender, e);
         }
     }
+    /// <summary>
+    /// Specifies that the string property this attribute is attached to contains a identifier, 
+    /// such that it will be serialize accordingly (i.e. by default the first letter is lowercased).
+    /// </summary>
+    public class IdentifierViewBinding : ViewBindingAsAttribute
+    {
+        public static string ToTypescriptIdentifier(string s) => s.ToFirstLower();
+        public static string ToCSharpIdentifier(string s) => s.ToFirstUpper();
 
+        protected override object createSubstitute(object obj)
+        {
+            switch (obj)
+            {
+                case null:
+                    return null;
+                case string s:
+                    return ToTypescriptIdentifier(s);
+                default:
+                    throw new ArgumentException($"The attribute '${nameof(IdentifierViewBinding)}' can only be applied to string properties");
+            }
+        }
+    }
 }
