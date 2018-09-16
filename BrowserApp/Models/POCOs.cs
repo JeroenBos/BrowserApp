@@ -176,19 +176,5 @@ namespace BrowserApp.POCOs
                 throw new ArgumentException(error, nameof(commandInstruction));
             }
         }
-
-        public static string ToFirstLower(this string s)
-        {
-            Contract.Requires(!string.IsNullOrEmpty(s));
-
-            char lower = char.ToLowerInvariant(s[0]);
-            if (s.StartsWith(lower))
-                return s;
-            string result = lower.ToString() + s.Substring(1);
-            Contract.Ensures(result.Length == s.Length);
-            Contract.Ensures(result[0] == char.ToLowerInvariant(s[0]));
-            Contract.Ensures(result.Skip(1).SequenceEqual(s.Skip(1)));
-            return result;
-        }
     }
 }
