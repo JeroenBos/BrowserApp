@@ -1,6 +1,9 @@
 ﻿using BrowserApp.Commands;
 using BrowserApp.POCOs;
 using BrowserApp.Tests.Mocks;
+using JBSnorro;
+using JBSnorro.Diagnostics;
+using JBSnorro.Extensions;
 using JBSnorro.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -41,10 +44,10 @@ namespace BrowserApp.Tests
             Assert.IsInstanceOfType(this.changes[0], typeof(PropertyChange));
             Assert.AreEqual(nameof(CommandManager.Commands).ToFirstLower(), ((PropertyChange)this.changes[0]).PropertyName);
             Assert.IsInstanceOfType(this.changes[1], typeof(PropertyChange));
-            Assert.AreEqual("Increment", ((PropertyChange)this.changes[1]).PropertyName);
+            Assert.AreEqual("increment", ((PropertyChange)this.changes[1]).PropertyName);
             Assert.IsInstanceOfType(this.changes[2], typeof(PropertyChange));
             Assert.AreEqual(nameof(CommandViewModel.Name).ToFirstLower(), ((PropertyChange)this.changes[2]).PropertyName);
-            Assert.AreEqual("Increment", ((PropertyChange)this.changes[2]).Value);
+            Assert.AreEqual("increment", ((PropertyChange)this.changes[2]).Value);
         }
         [TestMethod]
         public void NoInitialChanges()
@@ -64,5 +67,16 @@ namespace BrowserApp.Tests
 
             Assert.AreEqual(1, commandManager.Count);
         }
+
+        [TestMethod]
+        public void TestExecuteIncrementCommandIncrementsCounter()
+        {
+            var counter = new CounterViewModel();
+            SpecificCode.Initialize(this.commandManager);
+            this.commandManager.Execute(null, "Increment", counter, new object());
+
+            Assert.AreEqual(1, counter.CurrentCount);
+        }
+
     }
 }

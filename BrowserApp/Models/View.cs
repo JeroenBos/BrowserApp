@@ -109,8 +109,7 @@ namespace BrowserApp
 
             if (IncludeProperty(sender, propertyInfo))
             {
-                var value = propertyInfo.GetValue(sender);
-                this.AddChange(PropertyChange.Create(idProvider[sender], e.PropertyName, value, idProvider));
+                this.AddChange(PropertyChange.Create(propertyInfo, sender, idProvider));
             }
         }
         private void collectionChanged(object sender_, NotifyCollectionChangedEventArgs e)

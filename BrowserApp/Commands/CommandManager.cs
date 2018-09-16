@@ -129,7 +129,7 @@ namespace BrowserApp.Commands
         public event PropertyChangedEventHandler PropertyChanged { add { } remove { } }
         [NoViewBinding]
         public ICommand Command { get; }
-
+        [IdentifierViewBinding]
         public string Name { get; }
 
         internal CommandViewModel(CommandManager manager,

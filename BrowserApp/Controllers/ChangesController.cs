@@ -33,6 +33,7 @@ namespace BrowserApp.Controllers
         {
             var userSession = await this.userSessionManager.GetOrCreateSessionAsync(this.User);
             SpecificCode.Initialize(userSession.CommandManager); // because alwaysReturnNewUserSessions
+            instruction.CommandName = IdentifierViewBinding.ToCSharpIdentifier(instruction.CommandName);
             await userSession.ExecuteCommand(instruction, this.User);
             return await userSession.FlushOrWait();
         }

@@ -77,6 +77,15 @@ namespace BrowserApp.POCOs
         public string PropertyName { get; set; }
         public object Value { get; set; }
 
+
+        /// <param name="container"> The object that contains the specified property. </param>
+        public static PropertyChange Create(PropertyInfo propertyInfo, object container, IIdProvider idProvider)
+        {
+            object value = propertyInfo.GetValue(container);
+            string propertyName = IdentifierViewBinding.ToTypescriptIdentifier(propertyInfo.Name);
+            return Create(idProvider[container], propertyName, value, idProvider);
+        }
+        /// <param name="propertyName"> The name of the property how it will be serialized. </param>
         /// <param name="value"> Can be a view model. </param>
         public static PropertyChange Create(int containerId, string propertyName, object value, IIdProvider idProvider)
         {
@@ -84,6 +93,7 @@ namespace BrowserApp.POCOs
 
             return Create(containerId, propertyName, Reference.AsReferenceOrDefault(value, idProvider));
         }
+        /// <param name="propertyName"> The name of the property how it will be serialized. </param>
         /// <param name="value"> Cannot be a view model. </param>
         public static PropertyChange Create(int containerId, string propertyName, object value)
         {

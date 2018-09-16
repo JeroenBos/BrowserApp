@@ -190,12 +190,9 @@ namespace BrowserApp
 
             public void Accept(INotifyPropertyChanged container)
             {
-                int containerId = this.idProvider[container];
-
                 foreach (var propertyInfo in GetIncludedProperties(container))
                 {
-                    object value = propertyInfo.GetValue(container);
-                    this.changes.Add(PropertyChange.Create(containerId, propertyInfo.Name, value, idProvider));
+                    this.changes.Add(PropertyChange.Create(propertyInfo, container, idProvider));
                 }
             }
             public void Accept(INotifyCollectionChanged collection)
@@ -230,6 +227,11 @@ namespace BrowserApp
                 return propertyInfo;
             }
             public abstract object GetValue(object container);
+            /// <summary>
+            /// Gets the name of the property, by which it can be retrieved via reflection or <see cref="IExtraViewPropertiesContainer.Properties"/>.
+            /// This may differ from the name of the property by which is it serialized, 
+            /// which is the result of calling <see cref="IdentifierViewBinding.ToTypescriptIdentifier(string)"/> on <see cref="this.Name"/>.
+            /// </summary>
             public abstract string Name { get; }
             public abstract Type PropertyType { get; }
 
@@ -238,7 +240,7 @@ namespace BrowserApp
             private sealed class RegularPropertyInfo : PropertyInfo
             {
                 private readonly System.Reflection.PropertyInfo info;
-                public override string Name => info.Name.ToFirstLower();
+                public override string Name => info.Name;
                 public override Type PropertyType => info.PropertyType;
                 public override object GetValue(object container)
                 {
