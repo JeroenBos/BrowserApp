@@ -259,3 +259,10 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+
+
+JBSnorro.View/ClientApp/**/*.js
+JBSnorro.View/ClientApp/**/*.js.map
+
+JBSnorro.View.App/ClientApp/**/*.js
+JBSnorro.View.App/ClientApp/**/*.js.map

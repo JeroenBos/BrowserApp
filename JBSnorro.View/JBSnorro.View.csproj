@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <FileUpgradeFlags>40</FileUpgradeFlags>
+    <OldToolsVersion>15.0</OldToolsVersion>
+    <UpgradeBackupLocation>D:\BrowserApp\Backup\</UpgradeBackupLocation>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <StartupObject />
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\ASDE\JBSnorro\JBSnorro.csproj" />
+  </ItemGroup>
+</Project>
