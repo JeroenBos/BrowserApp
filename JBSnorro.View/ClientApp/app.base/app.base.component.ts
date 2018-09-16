@@ -10,7 +10,7 @@ import { CommandBindingWithCommandName } from '../commands/commands';
     templateUrl: './app.base.component.html',
     styleUrls: ['./app.base.component.css']
 })
-export abstract class AppBaseComponent extends BaseComponent<AppBase>{
+export abstract class AppBaseComponent<TViewModel extends AppBase> extends BaseComponent<TViewModel>{
     @ViewChild(CommandManager) // @ts-ignore: setter is used implicitly
     private set commandManagerSetter(value: any) {
         (<any>this).commandManager = value;
@@ -39,6 +39,7 @@ export abstract class AppBaseComponent extends BaseComponent<AppBase>{
         (<any>this).viewModel = viewModel;
         return this.viewModel;
     }
+    protected abstract populateInitialViewModel(appBaseViewModel: AppBase): void;
 }
 export interface AppBase extends BaseViewModel {
     commandManager: CommandManagerViewModel;

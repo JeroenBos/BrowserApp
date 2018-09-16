@@ -1,7 +1,12 @@
 <div class='container-fluid'>
+  <commandmanager [viewModel]="viewModel.commandManager"
+                  [server]="server"></commandmanager>
   <div class='row'>
     <div class='col-sm-3'>
-      <app-counter></app-counter>
+      <app-counter *ngIf="viewModel.counter != null"
+                   [viewModel]="counter"
+                   [server]="server"
+                   [commandManager]="commandManager"></app-counter>
     </div>
   </div>
 </div>
