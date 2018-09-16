@@ -147,10 +147,8 @@ namespace BrowserApp.POCOs
         public string CommandName { get; set; }
         public int ViewModelId { get; set; }
         public object EventArgs { get; set; }
-    }
-    public static class CommandInstructionExtensions
-    {
-        public static void CheckInvariants(this CommandInstruction commandInstruction, ILogger logger)
+
+        public static void CheckInvariants(CommandInstruction commandInstruction, ILogger logger)
         {
             string error = null;
             if (commandInstruction == null)
