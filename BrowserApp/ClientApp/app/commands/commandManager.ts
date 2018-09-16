@@ -1,10 +1,10 @@
 ﻿import 'rxjs/add/operator/toPromise';
 import { BaseViewModel, ICommandManager, BaseComponent } from '../components/base.component';
 import { CommandInstruction } from './commandInstruction';
-import { Command, CommandBindingWithCommandName, ClientsideOptimizationCommand, OptimizationCanExecute } from './commands';
+import { CommandBindingWithCommandName, CommandOptimization, EventToCommandPropagation, DefaultEventArgPropagations, CommandViewModel } from './commands';
 import { ConditionAST } from './ConditionAST'
 import { CanonicalInputBinding, Kind } from './inputBindingParser';
-import { InputEvent } from './inputTypes';
+import { InputEvent, CommandArgs } from './inputTypes';
 import { Component, Input } from '@angular/core';
 
 @Component({
@@ -27,21 +27,26 @@ export class CommandManager extends BaseComponent<CommandManagerViewModel> imple
     public get id() {
         return this.viewModel.__id;
     }
-    public constructor() {
-        super();
-    }
 
-    public optimizeClientside(commandName: string, command: ClientsideOptimizationCommand) {
+    private readonly commandOptimizations = new Map<string, CommandOptimization>();
+    private readonly commandEventPropagations = new Map<string, EventToCommandPropagation>();
+
+    public optimizeCommandClientside(commandName: string, command: CommandOptimization) {
         if (commandName == null || commandName == '') {
             throw new Error('Invalid command name specified');
         }
 
-        const binding = this.commands[commandName];
-        if (binding === undefined) {
-            throw new Error(`The command '${name}' is not registered at the command manager`);
+        this.commandOptimizations.set(commandName, command);
+    }
+    public setEventArgPropagation(commandName: string, propagation: EventToCommandPropagation) {
+        if (commandName == null || commandName == '') {
+            throw new Error('Invalid command name specified');
+        }
+        if (!this.hasCommand(commandName)) {
+            throw new Error(`No command with the name '${commandName}' exists`);
         }
 
-        binding.clientsideOptimization = command;
+        this.commandEventPropagations.set(commandName, propagation);
     }
     public bind(commandName: string, inputBinding: string, condition: string = "") {
         const commandBinding = this.commands[commandName];
@@ -60,9 +65,9 @@ export class CommandManager extends BaseComponent<CommandManagerViewModel> imple
 
     }
     public hasCommand(name: string): boolean {
-        return this.commands[name] !== undefined;
+        return this.commands[name] !== undefined
+            && !this.commandOptimizations.has(name); // if this is true, then only a clientside command exists.
     }
-
 
     /**
        * 
@@ -71,16 +76,10 @@ export class CommandManager extends BaseComponent<CommandManagerViewModel> imple
        * @param e Optional event args, which is consumed if specified (i.e. propagation is stopped).
        */
     public executeCommandByName(commandName: string, sender: BaseViewModel, e?: InputEvent): void {
-        const command = this.commands[commandName];
-        if (command === undefined) {
-            throw new Error(`The command '${commandName}' does not exist`);
-        }
-        if (!command.condition(this.flags).toBoolean(sender, e)) {
+        const executed = this.executeCommandIfPossible(commandName, sender, e);
+        if (!executed && this.hasCommand(commandName)) {
             console.warn(`The command '${commandName}' cannot execute on '${Object.getPrototypeOf(this).constructor.name}'(id=${sender.__id})`);
-            return;
         }
-
-        this.executeCommandIfPossible(command, sender, e);
     }
     public handleMouseMove(sender: BaseViewModel, e: MouseEvent): void {
 
@@ -106,25 +105,25 @@ export class CommandManager extends BaseComponent<CommandManagerViewModel> imple
         inputBinding: CanonicalInputBinding,
         sender: BaseViewModel,
         e: InputEvent): void {
-        const commands = this.getExecutableCommandsBoundTo(inputBinding, sender, e);
 
-        if (commands.length != 0) {
-            // decide here whether to invoke all executable bound commands, or merely the first one, or dependent on properties of InputEvent 
-            this.executeCommandIfPossible(commands[0], sender, e);
-            e.stopPropagation();
+        const commandNames = this.getCommandBindingsFor(inputBinding, sender, e);
+
+        for (let i = 0; i < commandNames.length; i++) {
+
+            const executed = this.executeCommandIfPossible(commandNames[0], sender, e);
+            if (executed) {
+                e.stopPropagation();
+                // decide here whether to invoke all executable bound commands, or merely the first one, or dependent on properties of InputEvent 
+                break;
+            }
         }
+
     }
 
     /**
-     * Filters on 
-     * - whether a condition is bound to the specified input, 
-     * - whether the binding condition holds,
-     * - whether the command can currently be executed. 
-     * @param inputBinding
-     * @param sender
-     * @param e
+     * Gets the names of the commands bound to the specified input, for which the binding condition is true.
      */
-    private getExecutableCommandsBoundTo(inputBinding: CanonicalInputBinding, sender: BaseViewModel, e: InputEvent): Command[] {
+    private getCommandBindingsFor(inputBinding: CanonicalInputBinding, sender: BaseViewModel, e: InputEvent): string[] {
         const commandBindings = this.inputBindings.get(inputBinding);
         if (commandBindings === undefined) {
             return [];
@@ -133,46 +132,70 @@ export class CommandManager extends BaseComponent<CommandManagerViewModel> imple
         const commandNames: string[] = [];
 
         commandBindings.forEach((binding: CommandBindingWithCommandName) => {
-            const command = this.commands[binding.commandName];
             if (binding.condition.toBoolean(sender, e)) {
                 commandNames.push(binding.commandName);
             }
         });
 
-        return commandNames
-            .map(commandName => this.commands[commandName]!)
-            .filter(command => command.condition(this.flags).toBoolean(sender, e));
+        return commandNames;
     }
 
-    private executeCommandIfPossible(command: Command, sender: BaseViewModel, e?: InputEvent): boolean {
+    private executeCommandIfPossible(commandName: string, sender: BaseViewModel, e?: InputEvent): boolean {
 
-        if (!command.condition(this.flags).toBoolean(sender, e)) {
+        const args = this.getEventArgs(commandName, sender, e);
+        const serverSideExecuted = this.executeServersideCommandIfPossible(commandName, sender, args, e);
+        const clientSideExecuted = this.executeClientsideCommandIfPossible(commandName, sender, args);
+
+        return serverSideExecuted || clientSideExecuted;
+    }
+    private getEventArgs(commandName: string, sender: BaseViewModel, e?: InputEvent): any {
+        const propagation = this.commandEventPropagations.get(commandName);
+        if (propagation === undefined) {
+            return undefined;
+        }
+
+        if (DefaultEventArgPropagations.IsInstanceOf(propagation)) {
+            return DefaultEventArgPropagations.GetDefault(propagation)(e);
+        }
+        else {
+            return propagation(e);
+        }
+    }
+    private executeServersideCommandIfPossible(commandName: string, sender: BaseViewModel, args: CommandArgs, e: InputEvent | undefined): boolean {
+
+        const command = this.commands[commandName];
+        if (command === undefined) {
+            if (this.commandOptimizations.get(commandName) === undefined) {
+                console.warn(`The command '${commandName}' does not exist`);
+            }
             return false;
         }
 
-        const args = command.getEventArgs(e);
-
-        const executeCommandCondition = command.clientsideOptimization === undefined
-            ? OptimizationCanExecute.ServersideOnly
-            : command.clientsideOptimization.canExecute(sender, args);
-
-        if (executeCommandCondition != OptimizationCanExecute.False && args !== undefined) {
-            args.stopPropagation();
+        if (command.condition !== undefined && ConditionAST.parse(command.condition, this.flags).toBoolean(sender, e)) {
+            return false;
         }
 
-        if (executeCommandCondition & OptimizationCanExecute.ServersideOnly) {
-            const e_serverSide = command.getEventArgs(args);
-            this.server.executeCommand(new CommandInstruction(command.id, sender, e_serverSide));
-        }
-
-        if (executeCommandCondition & OptimizationCanExecute.ClientsideOnly) {
-            command.clientsideOptimization!.execute(sender, args);
-        }
-
+        this.server.executeCommand(new CommandInstruction(commandName, sender, args));
         return true;
     }
+    private executeClientsideCommandIfPossible(commandName: string, sender: BaseViewModel, args: CommandArgs): boolean {
+        const command = this.commandOptimizations.get(commandName);
+        if (command === undefined) {
+            return false;
+        }
 
+        if (!command.canExecute(sender, args)) {
+            return false;
+        }
+
+        command.execute(sender, args);
+        return true;
+    }
 }
+
+
+
+
 
 export interface CommandManagerViewModel extends BaseViewModel {
     flags: Map<string, boolean>;
@@ -182,5 +205,5 @@ export interface CommandManagerViewModel extends BaseViewModel {
 
 
 export interface CommandsMap {
-    [s: string]: Command;
+    [s: string]: CommandViewModel;
 }

@@ -1,17 +1,18 @@
 ﻿import 'rxjs/add/operator/toPromise';
 import { BaseViewModel, BaseComponent } from '../components/base.component';
+import { CommandArgs } from './inputTypes';
 
 export class CommandInstruction {
-    public readonly commandId: number;
+    public readonly commandName: string;
     public readonly viewModelId: number;
     public readonly eventArgs: Exclude<any, null | undefined>;
 
     public constructor(
-        commandId: number,
+        commandName: string,
         viewModel: BaseViewModel | BaseComponent<any> | number,
-        eventArgs?: any) {
+        eventArgs?: CommandArgs) {
 
-        this.commandId = commandId;
+        this.commandName = commandName;
         this.viewModelId = isNumeric(viewModel)
             ? <number>viewModel
             : (<BaseViewModel | BaseComponent<any>>viewModel).__id;

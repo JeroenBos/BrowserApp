@@ -55,7 +55,7 @@ export class ChangesPropagator implements IChangePropagator {
         this.post(this.baseUrl + 'api/Changes/RegisterRequest');
     }
     public async executeCommand(command: CommandInstruction) {
-        if (command == null || command.commandId < 0 || command.viewModelId < 0 || command.eventArgs == null) {
+        if (command == null || command.commandName == null || command.commandName == '' || command.viewModelId < 0 || command.eventArgs == null) {
             throw new Error("Invalid command instruction");
         }
         this.post(this.baseUrl + 'api/Changes/ExecuteCommand', command);
