@@ -1,3 +1,4 @@
+using JBSnorro.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -27,7 +28,12 @@ namespace JBSnorro.View.App
             {
                 configuration.RootPath = "ClientApp/dist";
             });
+
+            var logger = new Logger();
+            var userSessionManager = UserSessionManager.Create(new TempUserSessionsStorage(), SpecificCode.getRoot_TODO_ToBeProvidedByExtension, logger);
+            services.AddTransient(serviceProvider => userSessionManager);
         }
+
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
