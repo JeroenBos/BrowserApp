@@ -78,7 +78,7 @@ module.exports = (env) => {
             path: path.join(__dirname, './ClientApp/dist')
         },
         target: 'node',
-        devtool: 'inline-source-map'
+        devtool: 'source-map'
     });
 
     return [clientBundleConfig, serverBundleConfig];
