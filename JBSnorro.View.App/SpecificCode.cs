@@ -16,11 +16,13 @@ namespace JBSnorro.View.App
 
         public static SpecificAppViewModel getRoot_TODO_ToBeProvidedByExtension(Stream data)
         {
-            return new SpecificAppViewModel()
+            var result = new SpecificAppViewModel()
             {
                 Counter = new CounterViewModel(),
                 CommandManager = new CommandManager()
             };
+            Initialize(result.CommandManager);
+            return result;
         }
 
     }
