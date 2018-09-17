@@ -9,12 +9,12 @@ import { Counter } from './counter/counter.component';
     styleUrls: ['./app.component.css']
 })
 export class AppComponent extends AppBaseComponent<App> {
-    constructor(http: Http, @Inject('BASE_URL') baseUrl: string) {
-        super(<any>http, baseUrl);
-
-        this.server.open();
-    }
     title = 'app';
+
+    constructor(http: Http, @Inject('BASE_URL') baseUrl: string) {
+        super(http, baseUrl);
+    }
+
     protected populateInitialViewModel(appBaseViewModel: App): void {
     }
     public get counter(): Counter {
