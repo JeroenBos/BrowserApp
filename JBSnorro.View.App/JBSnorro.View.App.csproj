@@ -24,10 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\ASDE\JBSnorro\JBSnorro.csproj" />
     <ProjectReference Include="..\JBSnorro.View\JBSnorro.View.csproj" />
   </ItemGroup>
