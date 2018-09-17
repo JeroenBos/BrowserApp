@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { BaseComponent, BaseViewModel } from './../../view.index';
+import { BaseComponent, BaseViewModel } from './../view.index';
 
 @Component({
     selector: 'app-counter',

@@ -4,9 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { HttpModule} from '@angular/http';
 import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import { AppComponent } from './app/app.component';
 import { CounterComponent } from './counter/counter.component';
-import { CommandManager } from '../view.index';
+import { CommandManager } from './view.index';
 
 @NgModule({
   declarations: [
