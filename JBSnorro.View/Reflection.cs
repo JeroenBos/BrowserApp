@@ -3,6 +3,7 @@ using JBSnorro.Collections;
 using JBSnorro.Diagnostics;
 using JBSnorro.Extensions;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -352,6 +353,16 @@ namespace JBSnorro.View
         {
             var result = new Notifier();
             collection.CollectionChanged += onCollectionChange;
+
+            if (collection is IEnumerable enumerable)
+            {
+                var currentCollection = enumerable.Cast<object>().ToList();
+                onCollectionChange(collection, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, currentCollection));
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"A collection of type '{collection.GetType()}' does not derive from 'IEnumerable' and hence no initial elements were detectable");
+            }
             return result;
             void onCollectionChange(object sender, NotifyCollectionChangedEventArgs e)
             {
