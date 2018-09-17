@@ -21,21 +21,24 @@ namespace JBSnorro.View.App.Controllers
         }
 
         [HttpPost("[action]")]
-        public Task<object> Open()
+        public async Task<object> Open()
         {
-            return this.userSessionManager.Open(this.User);
+            var result = await this.userSessionManager.Open(this.User);
+            return result;
         }
         [HttpPost("[action]")]
-        public Task<object> ExecuteCommand([FromBody] CommandInstruction instruction)
+        public async Task<object> ExecuteCommand([FromBody] CommandInstruction instruction)
         {
             var correctedInstruction = instruction.WithCSharpCommandName();
 
-            return this.userSessionManager.ExecuteCommand(this.User, correctedInstruction);
+            var result = await this.userSessionManager.ExecuteCommand(this.User, correctedInstruction);
+            return result;
         }
         [HttpPost("[action]")]
-        public Task<object> RegisterRequest()
+        public async Task<object> RegisterRequest()
         {
-            return this.userSessionManager.RegisterRequest(this.User);
+            var result = await this.userSessionManager.RegisterRequest(this.User);
+            return result;
         }
     }
 }
