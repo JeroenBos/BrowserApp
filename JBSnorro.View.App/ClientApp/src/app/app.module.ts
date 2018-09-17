@@ -6,11 +6,13 @@ import { HttpModule} from '@angular/http';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
 import { CounterComponent } from './counter/counter.component';
+import { CommandManager } from '../view.index';
 
 @NgModule({
   declarations: [
     AppComponent,
     CounterComponent,
+    CommandManager
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
