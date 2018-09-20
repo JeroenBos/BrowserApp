@@ -4,7 +4,8 @@
   "description": "A library for binding angular components to C# viewmodels (INotifyPropertyChanged), and for invoking C# commands from angular",
   "main": "index.js",
   "scripts": {
-    "test": "mocha dist/tests/**/*.spec.js"
+    "build": "webpack",
+    "test": "mocha dist/test/index.js"
   },
   "private": true,
   "author": "Jeroen Bos",
@@ -19,12 +20,18 @@
     "ts-keycode-enum": "1.0.6"
   },
   "devDependencies": {
-    "@types/chai": "4.1.4",
-    "@types/mocha": "5.2.5",
+    "@types/chai": "3.4.34",
+    "@types/mocha": "2.2.39",
+    "babel-core": "6.26.0",
+    "babel-preset-env": "1.6.0",
     "chai": "4.1.2",
-    "mocha": "5.2.0",
-    "mocha-typescript": "1.1.17",
+    "mocha": "^3.2.0",
+    "mocha-typescript": "1.1.12",
+    "ts-loader": "3.2.0",
     "ts-node": "7.0.1",
-    "typescript": "3.0.3"
+    "typescript": "3.0.3",
+    "webpack": "3.10.0",
+    "webpack-config-utils": "2.3.0",
+    "webpack-dev-server": "2.10.1"
   }
 }
