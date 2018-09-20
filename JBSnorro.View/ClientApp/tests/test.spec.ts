@@ -1,9 +1,9 @@
-var { describe, it } = require('mocha');
+import 'mocha';
 
 describe('Hello function', () => {
 
   it('should return hello world', () => {
-    console.warn('c');
+    console.warn('d');
   });
 
 });
