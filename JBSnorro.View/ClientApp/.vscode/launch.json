@@ -12,7 +12,7 @@
                 "--timeout",
                 "999999",
                 "--colors",
-                "${workspaceFolder}/dist/test/index.js",
+                "${workspaceFolder}/dist/webpacked.js",
                 // "--fgrep",
                 // "*"
             ],

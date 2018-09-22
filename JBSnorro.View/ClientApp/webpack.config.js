@@ -3,7 +3,7 @@ const nodeEnv = process.env.NODE_ENV || 'development';
 module.exports = {
     devtool: 'source-map',
     entry: './tests/index.spec.ts',
-    output: { filename: 'dist/test/index.js' },
+    output: { filename: 'dist/webpacked.js' },
     module: {
         rules: [
             {
