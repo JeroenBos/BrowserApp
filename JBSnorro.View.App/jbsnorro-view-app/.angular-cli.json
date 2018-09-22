@@ -5,7 +5,7 @@
   },
   "apps": [
     {
-      "root": "src",
+      "root": "./",
       "outDir": "dist",
       "assets": [
         "assets"
@@ -19,7 +19,7 @@
       "prefix": "app",
       "styles": [
         "styles.css",
-        "../node_modules/bootstrap/dist/css/bootstrap.min.css"
+        "./node_modules/bootstrap/dist/css/bootstrap.min.css"
       ],
       "scripts": [],
       "environmentSource": "environments/environment.ts",
@@ -29,18 +29,13 @@
       }
     }
   ],
-  "e2e": {
-    "protractor": {
-      "config": "./protractor.conf.js"
-    }
-  },
   "lint": [
     {
-      "project": "src/tsconfig.app.json",
+      "project": "jbsnorro-view-app/tsconfig.app.json",
       "exclude": "**/node_modules/**"
     },
     {
-      "project": "src/tsconfig.spec.json",
+      "project": "jbsnorro-view-app/tsconfig.spec.json",
       "exclude": "**/node_modules/**"
     },
     {
