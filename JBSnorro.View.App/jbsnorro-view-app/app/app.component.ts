@@ -12,7 +12,7 @@ export class AppComponent extends AppBaseComponent<App> {
     title = 'app';
 
     constructor(http: Http, @Inject('BASE_URL') baseUrl: string) {
-        super(http, baseUrl);
+        super(<any>http, baseUrl);
     }
 
     protected populateInitialViewModel(appBaseViewModel: App): void {

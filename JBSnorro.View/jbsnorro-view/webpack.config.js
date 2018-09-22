@@ -1,22 +1,20 @@
 const nodeEnv = process.env.NODE_ENV || 'development';
+const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 module.exports = {
     devtool: 'source-map',
-    entry: './test/test.spec.ts',
-    output: { filename: 'D:/index/index.js' },
+    entry: './tests/index.spec.ts',
+    output: { filename: 'dist/jbsnorro.view.js' },
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
+                test: /\.ts$/,
                 loader: 'ts-loader'
             }
         ]
     },
     resolve: {
-        extensions: ['.ts', '.tsx', '.js'],
-        alias: {
-            vue: 'vue/dist/vue.esm.js'
-        }
+        extensions: ['.ts', '.js'],
     },
     // Suppress fatal error: Cannot resolve module 'fs'
     // @relative https://github.com/pugjs/pug-loader/issues/8
@@ -25,4 +23,7 @@ module.exports = {
         fs: 'empty',
         child_process: 'empty'
     },
+    plugins: [
+        new CleanWebpackPlugin(['dist'])
+    ],
 };

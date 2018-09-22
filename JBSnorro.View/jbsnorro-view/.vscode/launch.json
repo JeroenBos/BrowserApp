@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Mocha jbsnorro-view",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "preLaunchTask": "webpack_watch",
+            "args": [
+                "--timeout",
+                "999999",
+                "--colors",
+                "${workspaceFolder}/dist/webpacked.js",
+                // "--fgrep",
+                // "*"
+            ],
+            "console": "internalConsole",
+            "internalConsoleOptions": "neverOpen",
+        }
+    ]
+}

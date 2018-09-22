@@ -6,10 +6,8 @@
     "ng": "ng",
     "start": "ng serve --extract-css",
     "build": "webpack",
-    "build:ssr": "npm run build -- --app=ssr --output-hashing=media",
-    "test": "mocha dist/test/index.js",
-    "lint": "ng lint",
-    "e2e": "ng e2e"
+    "watch": "webpack --watch",
+    "test": "webpack && mocha dist/jbsnorro.view.app.packed.js"
   },
   "private": true,
   "dependencies": {
@@ -50,7 +48,9 @@
     "@types/chai": "3.4.34",
     "webpack": "3.10.0",
     "webpack-config-utils": "2.3.0",
-    "webpack-dev-server": "2.10.1"
+    "webpack-dev-server": "2.10.1",
+    "ts-loader": "3.2.0",
+    "clean-webpack-plugin": "0.1.19"
   },
   "optionalDependencies": {
     "node-sass": "4.9.0"
