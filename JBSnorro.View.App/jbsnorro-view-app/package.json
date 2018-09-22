@@ -32,8 +32,6 @@
     "@angular/cli": "1.7.0",
     "@angular/compiler-cli": "5.2.0",
     "@angular/language-service": "5.2.0",
-    "@types/jasmine": "2.8.3",
-    "@types/jasminewd2": "2.0.2",
     "@types/node": "6.0.60",
     "codelyzer": "4.0.1",
     "protractor": "5.1.2",
@@ -42,8 +40,6 @@
     "typescript": "3.0.3",
     "mocha": "3.2.0",
     "mocha-typescript": "1.1.12",
-    "babel-core": "6.26.0",
-    "babel-preset-env": "1.6.0",
     "@types/mocha": "2.2.39",
     "@types/chai": "3.4.34",
     "webpack": "3.10.0",
@@ -54,10 +50,5 @@
   },
   "optionalDependencies": {
     "node-sass": "4.9.0"
-  },
-  "babel": {
-    "presets": [
-      "env"
-    ]
   }
 }
