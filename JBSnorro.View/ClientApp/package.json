@@ -6,7 +6,8 @@
   "scripts": {
     "build": "webpack",
     "watch": "webpack --watch",
-    "test": "webpack && mocha dist/webpacked.js"
+    "test": "webpack && mocha dist/webpacked.js",
+    "testonly": "mocha dist/webpacked.js"
   },
   "private": true,
   "author": "Jeroen Bos",
