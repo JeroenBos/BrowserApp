@@ -26,14 +26,11 @@
 
 import 'mocha';
 
-describe('Hello function', () => {
+describe('All JBSnorro.View tests', () => {
 
-  it('should return hello world', () => {
-
+  it('', () => {
     debugger;
     require('./test.spec');
-    require('./test.spec.1');
-    console.warn('e');
   });
 
 });

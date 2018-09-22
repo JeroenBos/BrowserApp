@@ -3,7 +3,7 @@ import 'mocha';
 describe('Hello function', () => {
 
   it('should return hello world', () => {
-    console.warn('dffa');
+    console.warn('Hello world');
   });
 
 });
