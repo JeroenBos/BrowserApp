@@ -1,4 +1,5 @@
 const nodeEnv = process.env.NODE_ENV || 'development';
+const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 module.exports = {
     devtool: 'source-map',
@@ -22,4 +23,7 @@ module.exports = {
         fs: 'empty',
         child_process: 'empty'
     },
+    plugins: [
+        new CleanWebpackPlugin(['dist'])
+    ],
 };
