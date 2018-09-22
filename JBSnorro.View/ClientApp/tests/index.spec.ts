@@ -30,6 +30,7 @@ describe('Hello function', () => {
 
   it('should return hello world', () => {
 
+    debugger;
     require('./test.spec');
     require('./test.spec.1');
     console.warn('e');
