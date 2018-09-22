@@ -6,11 +6,12 @@
             "request": "launch",
             "name": "Mocha",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "preLaunchTask": "webpack_watch",
             "args": [
                 "--timeout",
                 "999999",
                 "--colors",
-                "${workspaceFolder}/dist/tests/**/*.spec.js",
+                "${workspaceFolder}/dist/webpacked.js",
                 // "--fgrep",
                 // "*"
             ],

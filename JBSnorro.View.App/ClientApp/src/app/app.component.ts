@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { AppBaseComponent, AppBase } from './../view.index';
 import { Http } from '@angular/http';
-import { Counter } from './counter/counter.component';
+import { Counter } from '../counter/counter.component';
 
 @Component({
     selector: 'app-root',
