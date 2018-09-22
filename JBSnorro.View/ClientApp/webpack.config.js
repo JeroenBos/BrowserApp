@@ -2,7 +2,7 @@ const nodeEnv = process.env.NODE_ENV || 'development';
 
 module.exports = {
     devtool: 'source-map',
-    entry: './tests/test.spec.ts',
+    entry: './tests/index.spec.ts',
     output: { filename: 'dist/test/index.js' },
     module: {
         rules: [
@@ -13,10 +13,7 @@ module.exports = {
         ]
     },
     resolve: {
-        extensions: ['.spec.ts'],
-        alias: {
-            vue: 'vue/dist/vue.esm.js'
-        }
+        extensions: ['.ts', '.js'],
     },
     // Suppress fatal error: Cannot resolve module 'fs'
     // @relative https://github.com/pugjs/pug-loader/issues/8
