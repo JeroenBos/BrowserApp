@@ -7,10 +7,12 @@
             "name": "Mocha",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
+                "--require",
+                "ts-node/register",
                 "--timeout",
                 "999999",
                 "--colors",
-                "${workspaceFolder}/dist/tests/**/*.spec.js",
+                "${workspaceFolder}/dist/test/index.js",
                 // "--fgrep",
                 // "*"
             ],
