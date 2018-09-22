@@ -4,7 +4,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 module.exports = {
     devtool: 'source-map',
     entry: './tests/index.spec.ts',
-    output: { filename: 'dist/jbsnorro.view.app.packed.js' },
+    output: { filename: 'dist/jbsnorro.view.app.js' },
     module: {
         rules: [
             {

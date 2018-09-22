@@ -5,9 +5,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --extract-css",
-    "build": "webpack",
-    "watch": "webpack --watch",
-    "test": "webpack && mocha dist/jbsnorro.view.app.packed.js"
+    "build": "node_modules\\@angular\\cli\\node_modules\\.bin\\webpack",
+    "watch": "node_modules\\@angular\\cli\\node_modules\\.bin\\webpack --watch",
+    "test": "node_modules\\@angular\\cli\\node_modules\\.bin\\webpack && mocha dist/jbsnorro.view.app.js"
   },
   "private": true,
   "dependencies": {
