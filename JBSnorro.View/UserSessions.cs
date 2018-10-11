@@ -16,6 +16,8 @@ namespace JBSnorro.View
 {
     public sealed class UserSession
     {
+        public static bool processCommandsSyncronously = Global.DEBUG;
+
         private static readonly bool alwaysRerequest = false;
         public IAppViewModel ViewModelRoot { get; }
         public CommandManager CommandManager => ViewModelRoot.CommandManager;
@@ -107,75 +109,83 @@ namespace JBSnorro.View
             this.ViewModelRoot = viewModelRoot;
             this.viewModelIdProvider = new IdProvider();
             this.View = new View(viewModelRoot, this.RegisterChange, viewModelIdProvider);
-            this.commands = new ProcessingQueue<UserCommandInstruction>(() => Task.Run(this.worker));
+            this.commands = new ProcessingQueue<UserCommandInstruction>(this.worker);
             this.waiter = waiter ?? new AtMostOneAwaiter(defaultDuration: _10ms, maxDuration: _5minutes);
         }
 
         private void worker()
         {
-            while (commands.TryDequeue(out UserCommandInstruction instruction))
+            if (processCommandsSyncronously)
+                workerImpl();
+            else
+                Task.Run(() => workerImpl());
+
+            void workerImpl()
             {
-                bool success = false;
-                logger.LogInfo("UserSession: Dequeued command");
-                try
+                while (commands.TryDequeue(out UserCommandInstruction instruction))
                 {
-                    if (instruction.ViewModel == null)
-                    {
-                        throw new InvalidOperationException($"UserSession: Command failed: View model with id '{instruction.ViewModelId}' was not found");
-                    }
-                    else if (!CommandManager.Exists(instruction.CommandName))
-                    {
-                        string message = $"UserSession: Command failed: Command with name '{instruction.CommandName}' was not found";
-                        var found = CommandManager.GetCommandCaseInsensitive(instruction.CommandName);
-                        if (found != null)
-                            message += $", but '{found.Name}' was found (case-sensitive)";
-                        throw new InvalidOperationException(message);
-                    }
-                    else if (!CommandManager.IsAuthorized(instruction.User, instruction.CommandName))
-                    {
-                        throw new UnauthorizedAccessException($"UserSession: Command failed: The user is unauthorized to execute command '{instruction.CommandName}')");
-                    }
-                    else if (!CommandManager.CanExecute(instruction.User, instruction.CommandName, instruction.ViewModel, instruction.EventArgs))
-                    {
-                        logger.LogWarning("UserSession: Command not executed");
-                        instruction.tcs.TrySetCanceled();
-                    }
-                    else
-                    {
-                        CommandManager.Execute(instruction.User, instruction.CommandName, instruction.ViewModel, instruction.EventArgs);
-                        instruction.tcs.TrySetResult(null);
-                        success = true;
-                    }
-                }
-                catch (Exception e)
-                {
-                    // We catch the exception here and propagate it to the context that initiated the command execution via the task completion source.
-                    // If nobody is listening then nobody cares. In any case this simple worker thread doesn't care
-                    logger.LogError($"{e.GetType().Name}: {e.Message}");
-                    instruction.tcs.TrySetException(e);
-                }
-                finally
-                {
+                    bool success = false;
+                    logger.LogInfo("UserSession: Dequeued command");
                     try
                     {
-                        commands.OnProcessed(instruction);
+                        if (instruction.ViewModel == null)
+                        {
+                            throw new InvalidOperationException($"UserSession: Command failed: View model with id '{instruction.ViewModelId}' was not found");
+                        }
+                        else if (!CommandManager.Exists(instruction.CommandName))
+                        {
+                            string message = $"UserSession: Command failed: Command with name '{instruction.CommandName}' was not found";
+                            var found = CommandManager.GetCommandCaseInsensitive(instruction.CommandName);
+                            if (found != null)
+                                message += $", but '{found.Name}' was found (case-sensitive)";
+                            throw new InvalidOperationException(message);
+                        }
+                        else if (!CommandManager.IsAuthorized(instruction.User, instruction.CommandName))
+                        {
+                            throw new UnauthorizedAccessException($"UserSession: Command failed: The user is unauthorized to execute command '{instruction.CommandName}')");
+                        }
+                        else if (!CommandManager.CanExecute(instruction.User, instruction.CommandName, instruction.ViewModel, instruction.EventArgs))
+                        {
+                            logger.LogWarning("UserSession: Command not executed");
+                            instruction.tcs.TrySetCanceled();
+                        }
+                        else
+                        {
+                            CommandManager.Execute(instruction.User, instruction.CommandName, instruction.ViewModel, instruction.EventArgs);
+                            instruction.tcs.TrySetResult(null);
+                            success = true;
+                        }
                     }
                     catch (Exception e)
                     {
-                        logger.LogError($"{e.GetType().Name}: UserSession.OnProcessed(command): {e.Message}");
+                        // We catch the exception here and propagate it to the context that initiated the command execution via the task completion source.
+                        // If nobody is listening then nobody cares. In any case this simple worker thread doesn't care
+                        logger.LogError($"{e.GetType().Name}: {e.Message}");
+                        instruction.tcs.TrySetException(e);
                     }
-                }
+                    finally
+                    {
+                        try
+                        {
+                            commands.OnProcessed(instruction);
+                        }
+                        catch (Exception e)
+                        {
+                            logger.LogError($"{e.GetType().Name}: UserSession.OnProcessed(command): {e.Message}");
+                        }
+                    }
 
-                if (success)
-                {
-                    if (this.changes.Count != 0)
+                    if (success)
                     {
-                        logger.LogInfo("UserSession: Command completed. Pulsing");
-                        this.waiter.Pulse();
-                    }
-                    else
-                    {
-                        logger.LogInfo("UserSession: Command completed");
+                        if (this.changes.Count != 0)
+                        {
+                            logger.LogInfo("UserSession: Command completed. Pulsing");
+                            this.waiter.Pulse();
+                        }
+                        else
+                        {
+                            logger.LogInfo("UserSession: Command completed");
+                        }
                     }
                 }
             }
